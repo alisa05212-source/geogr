@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+authlib
+itsdangerous
+httpx
+sqlalchemy>=2.0.28
+psycopg2-binary

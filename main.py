@@ -1,0 +1,110 @@
+from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
+from authlib.integrations.starlette_client import OAuth, OAuthError
+from starlette.config import Config
+import uvicorn
+import secrets
+import os
+
+# Database Imports
+from sqlalchemy.orm import Session
+from database import init_db, get_db, User
+
+# CONFIGURATION
+# Best practice: Read from environment variables, fallback to local hardcoded values
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "69937171492-db62a2quc6970qscnro3mqkmh7elus47.apps.googleusercontent.com")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
+SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
+
+app = FastAPI()
+
+# Integrated Database Initialization
+init_db()
+
+# Session Middleware
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+
+# Static Files & Templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+# OAuth Setup
+oauth = OAuth()
+oauth.register(
+    name='google',
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
+# ROUTES
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    user = request.session.get('user')
+    return templates.TemplateResponse("index.html", {"request": request, "user": user})
+
+@app.get('/login/google')
+async def login_google(request: Request):
+    # Redirect URL must match what you set in Google Console (e.g., http://localhost:8000/auth/google)
+    redirect_uri = request.url_for('auth_google')
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.get('/auth/google')
+async def auth_google(request: Request, db: Session = Depends(get_db)):
+    try:
+        token = await oauth.google.authorize_access_token(request)
+        user_info = token.get('userinfo')
+        if not user_info:
+             # If using new Google Auth flow sometimes user info is in 'id_token' claims
+             user_info = await oauth.google.parse_id_token(request, token)
+        
+        # Check if user exists in DB
+        db_user = db.query(User).filter(User.google_id == user_info['sub']).first()
+        
+        if not db_user:
+            # Create new user
+            new_user = User(
+                google_id=user_info['sub'],
+                email=user_info.get('email'),
+                name=user_info.get('name'),
+                picture=user_info.get('picture')
+            )
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            db_user = new_user
+            
+        # Store essential info in session
+        request.session['user'] = {
+            'name': db_user.name,
+            'picture': db_user.picture,
+            'email': db_user.email,
+            'id': db_user.id
+        }
+    except OAuthError as error:
+        return HTMLResponse(f"<h1>Auth Error</h1><p>{error.error}</p>")
+    return RedirectResponse(url='/')
+
+@app.get('/logout')
+async def logout(request: Request):
+    request.session.pop('user', None)
+    return RedirectResponse(url='/')
+
+@app.get('/admin/users', response_class=HTMLResponse)
+async def admin_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    html_content = "<h1>Registered Users</h1><ul>"
+    for user in users:
+        html_content += f"<li>ID: {user.id} | Name: {user.name} | Email: {user.email}</li>"
+    html_content += "</ul>"
+    return html_content
+
+if __name__ == "__main__":
+    print("Starting server at http://localhost:8000")
+    uvicorn.run(app, host="0.0.0.0", port=8000)

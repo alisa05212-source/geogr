@@ -1,0 +1,539 @@
+:root {
+    --bg-dark: #0f172a;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent-blue: #0ea5e9;
+    --accent-purple: #a855f7;
+    --accent-gold: #fbbf24;
+    --glass-bg: rgba(15, 23, 42, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --sidebar-width: 380px;
+    --font-main: 'Inter', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100%;
+    position: relative;
+}
+
+#map {
+    flex-grow: 1;
+    z-index: 1;
+    background: #0b0f19;
+}
+
+/* Sidebar */
+.sidebar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: var(--sidebar-width);
+    max-height: calc(100vh - 40px);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    z-index: 1000;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.sidebar-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, var(--accent-blue) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sidebar-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.filter-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.filter-btn.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+}
+
+.filter-btn[data-filter="top"].active {
+    background: var(--accent-gold);
+    /* Gold for top items */
+    border-color: var(--accent-gold);
+    color: #000;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+}
+
+/* Details */
+.river-details {
+    min-height: 200px;
+    padding: 10px 0;
+}
+
+.info-card h2 {
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.badge-top {
+    background: var(--accent-gold);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.info-stat label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.info-stat span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.river-desc {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #cbd5e1;
+}
+
+.placeholder-text {
+    text-align: center;
+    color: var(--text-secondary);
+    padding-top: 40px;
+}
+
+/* Bottom Controls */
+.controls button {
+    width: 100%;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.controls button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Leaflet Tooltip Customization */
+.custom-tooltip {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #fff;
+    font-weight: bold;
+    font-family: var(--font-main);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    font-size: 1rem;
+}
+
+.leaflet-tooltip-left::before {
+    display: none;
+}
+
+.city-tooltip {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-family: var(--font-main);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.city-tooltip::before {
+    display: none;
+}
+
+/* River Flow Animation */
+@keyframes dash-flow {
+    0% {
+        stroke-dashoffset: 1000;
+        /* Start offset */
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        /* Move to 0 to simulate flow */
+    }
+}
+
+.river-flow {
+    stroke-dasharray: 10, 5;
+    /* Dashes for effect (dash, gap) */
+    animation: dash-flow 30s linear infinite;
+    /* Slow, continuous flow */
+}
+
+/* Pulse for Top Items */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.pulsing-icon {
+    position: relative;
+    z-index: 10;
+}
+
+
+/* Sidebar Image */
+.sidebar-image {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s;
+}
+
+.sidebar-image:hover {
+    transform: scale(1.02);
+}
+
+/* Maps Button */
+.maps-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.maps-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.5);
+}
+
+/* --- MOBILE OPTIMIZATION (iPhone 15 Pro & Others) --- */
+@media (max-width: 768px) {
+
+    html,
+    body {
+        position: fixed;
+        /* STRICTLY lock viewport */
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        /* No bouncing */
+        overscroll-behavior: none;
+    }
+
+    .app-container {
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Hide Netlify Badge */
+    #netlify-identity-widget,
+    iframe[id*="netlify"],
+    .netlify-badge,
+    div[class*="netlify"] {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    /* Sidebar: BOTTOM SHEET - STRICT HALF SCREEN */
+    .sidebar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+
+        width: 100%;
+        height: 55vh;
+        /* FIXED at 55% height */
+        max-height: 55vh;
+        /* Ensure it never grows larger */
+
+        border-radius: 24px 24px 0 0;
+        padding: 20px 16px 80px 16px;
+        /* Extra padding for scroll */
+
+        transform: translateY(0);
+        transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+        z-index: 3000;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+
+        -webkit-backdrop-filter: blur(35px);
+        backdrop-filter: blur(35px);
+        background: rgba(15, 23, 42, 0.98);
+
+        overflow-y: auto !important;
+        /* Force internal scrolling */
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Collapsed State (Peek Mode) */
+    .sidebar.mobile-collapsed {
+        transform: translateY(calc(55vh - 80px));
+        /* Hide all except top 80px header */
+        overflow: hidden !important;
+    }
+
+    /* Drag Handle */
+    .sidebar::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 48px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+    }
+
+    /* Filters: Single Row scrollable */
+    .filters {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 15px;
+        width: 100%;
+        min-height: 50px;
+        align-items: center;
+    }
+
+    .filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-btn {
+        flex: 0 0 auto;
+        padding: 10px 18px;
+        font-size: 0.95rem;
+        height: 40px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .filter-btn.active {
+        background: var(--accent-blue);
+        color: white;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+    }
+
+    /* Header */
+    .sidebar-header {
+        margin-bottom: 5px;
+    }
+
+    .sidebar-header h1 {
+        font-size: 1.5rem;
+        margin-top: 5px;
+        pointer-events: none;
+    }
+
+    /* Content/Info Readability */
+    .river-details {
+        padding-bottom: 120px;
+        /* Safety padding */
+    }
+
+    .river-desc {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #f1f5f9;
+        margin-bottom: 20px;
+    }
+
+    .info-stat span {
+        color: white;
+    }
+
+    /* Controls: Bottom Right FAB */
+    .controls {
+        position: absolute;
+        bottom: calc(55vh + 20px);
+        /* Position ABOVE the sheet */
+        right: 16px;
+        width: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 2000;
+        transition: bottom 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+        pointer-events: auto;
+    }
+
+    /* Move controls down when sidebar is collapsed */
+    .sidebar.mobile-collapsed~.controls {
+        bottom: 100px;
+    }
+
+    .controls button {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        font-size: 0;
+        background-color: rgba(30, 41, 59, 0.9);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Legend: Fixed Top Left */
+    .legend {
+        position: fixed !important;
+        top: 20px !important;
+        left: 20px !important;
+        margin: 0 !important;
+        z-index: 4000 !important;
+
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        border-radius: 12px;
+
+        /* Auto sizing limits */
+        width: auto;
+        max-width: 220px;
+        max-height: 40vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .legend.minimized {
+        width: 48px;
+        height: 48px;
+        padding: 0 !important;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .legend.minimized::after {
+        content: 'ℹ️';
+        font-size: 1.5rem;
+    }
+
+    .legend.minimized * {
+        display: none !important;
+    }
+
+    /* Zoom Controls */
+    .leaflet-control-zoom {
+        margin-top: 0 !important;
+        display: none !important;
+        /* Hide zoom buttons on mobile to save space if needed, or adjust */
+    }
+
+    /* Adjust if we keep zoom controls */
+    .leaflet-top.leaflet-right {
+        top: 90px;
+        right: 10px;
+        display: none;
+        /* Often gestures are enough, removes clutter */
+    }
+}
