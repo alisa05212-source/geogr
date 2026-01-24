@@ -21,13 +21,19 @@ from database import init_db, get_db, User
 
 # CONFIGURATION
 # Security: Read ONLY from environment variables. Hardcoding here is a security risk.
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
+raw_client_id = os.getenv("GOOGLE_CLIENT_ID", "")
+raw_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "")
+
+GOOGLE_CLIENT_ID = raw_client_id.strip()
+GOOGLE_CLIENT_SECRET = raw_client_secret.strip()
+SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32)).strip()
 
 # Defensive check for production
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
-    logger.warning("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in environment!")
+    logger.error("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in environment!")
+else:
+    # Senior practice: Log masked ID to verify the correct project is used
+    logger.info(f"OAuth configured with Client ID: {GOOGLE_CLIENT_ID[:10]}...{GOOGLE_CLIENT_ID[-10:]}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
