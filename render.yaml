@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: geogr-app
+    env: python
+    runtime: python3
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://geogr_db_user:gZdGO2pa5cdsrJVvz8vXHFrrGpu9bIFI@dpg-d5ohkrv5r7bs73dbiu50-a/geogr_db
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: RENDER
+        value: "true"
