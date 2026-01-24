@@ -20,10 +20,14 @@ from sqlalchemy.orm import Session
 from database import init_db, get_db, User
 
 # CONFIGURATION
-# Best practice: Read from environment variables, fallback to local hardcoded values
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "69937171492-db62a2quc6970qscnro3mqkmh7elus47.apps.googleusercontent.com")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
+# Security: Read ONLY from environment variables. Hardcoding here is a security risk.
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
+
+# Defensive check for production
+if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+    logger.warning("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in environment!")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
