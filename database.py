@@ -7,65 +7,44 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 
-from urllib.parse import urlparse, urlunparse
+# Get the DATABASE_URL and strip any potential whitespace/newlines
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db").strip()
 
-# Get and clean the DATABASE_URL
-raw_url = os.getenv("DATABASE_URL", "sqlite:///./users.db")
-DATABASE_URL = raw_url.strip() if raw_url else "sqlite:///./users.db"
+# Senior fix: Mandatoy format adjustments for SQLAlchemy
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-def build_stable_url(url):
-    if "sqlite" in url:
-        return url
-    
-    # Format fix for SQLAlchemy
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
-    
-    try:
-        parsed = urlparse(url)
-        host = parsed.hostname or ""
-        
-        # Senior fix: Auto-patch Render's short hostnames to include regional suffix
-        if host.startswith("dpg-") and "render.com" not in host:
-            host = f"{host}.frankfurt-postgres.render.com"
-        
-        # Ensure SSL requirement for cloud
-        query = parsed.query
-        if "sslmode=" not in query:
-            query = f"{query}&sslmode=require" if query else "sslmode=require"
-            
-        # Rebuild netloc carefully
-        netloc = parsed.username or ""
-        if parsed.password:
-            netloc += f":{parsed.password}"
-        if netloc:
-            netloc += "@"
-        netloc += host
-        if parsed.port:
-            netloc += f":{parsed.port}"
-            
-        return urlunparse((parsed.scheme, netloc, parsed.path, parsed.params, query, parsed.fragment))
-    except Exception as e:
-        logger.error(f"Critical URL parsing error: {e}")
-        return url
+# Senior fix: Auto-patch Render's short hostnames
+# We use simple string replacement to avoid mangling passwords with special characters (@, :, etc)
+if "dpg-" in DATABASE_URL and ".render.com" not in DATABASE_URL:
+    # Find the part after '@' and replace it with its full version
+    parts = DATABASE_URL.split("@")
+    if len(parts) > 1:
+        # parts[0] is postgresql://user:pass
+        # parts[1] is host/db
+        host_info = parts[-1].split("/")
+        host = host_info[0]
+        if host.startswith("dpg-"):
+            new_host = host + ".frankfurt-postgres.render.com"
+            DATABASE_URL = DATABASE_URL.replace(f"@{host}/", f"@{new_host}/")
 
-DATABASE_URL = build_stable_url(DATABASE_URL)
-
-# SSL configuration for SQLAlchemy engine
+# Enforce SSL for any non-sqlite connection
 connect_args = {}
 if "sqlite" not in DATABASE_URL:
     connect_args = {"sslmode": "require"}
+    # Ensure it's in the query params too
+    if "sslmode=" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require" if "?" not in DATABASE_URL else "&sslmode=require"
 
-# Masking for safety
+# Masking for safe logging (minimal)
 def get_masked_url(url):
     try:
-        p = urlparse(url)
-        return f"{p.scheme}://***:***@{p.hostname}/{p.path.lstrip('/')}"
-    except: return "error"
+        # Just show the hostname
+        return url.split("@")[-1].split("/")[0] if "@" in url else "sqlite"
+    except: return "parsing-error"
 
-logger.info(f"Final Connection Target: {get_masked_url(DATABASE_URL)}")
+logger.info(f"Connecting to: {get_masked_url(DATABASE_URL)}")
 
-# pool_pre_ping=True is essential for cloud DBs to handle dropped connections automatically
 engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
