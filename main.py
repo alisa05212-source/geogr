@@ -8,10 +8,16 @@ from starlette.config import Config
 import uvicorn
 import secrets
 import os
+import logging
+from contextlib import asynccontextmanager
 
 # Database Imports
 from sqlalchemy.orm import Session
 from database import init_db, get_db, User
+
+# Configure Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # CONFIGURATION
 # Best practice: Read from environment variables, fallback to local hardcoded values
@@ -19,10 +25,19 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "69937171492-db62a2quc6970qscnr
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "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")
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    logger.info("Initializing database...")
+    try:
+        init_db()
+        logger.info("Database initialized successfully.")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+    yield
+    # Shutdown logic (if needed)
 
-# Integrated Database Initialization
-init_db()
+app = FastAPI(lifespan=lifespan)
 
 # Session Middleware
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
