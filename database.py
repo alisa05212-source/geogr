@@ -10,13 +10,8 @@ logger = logging.getLogger(__name__)
 # Check for DATABASE_URL environment variable (from Render/Railway)
 # If not found or empty, fallback to local SQLite
 raw_url = os.getenv("DATABASE_URL", "")
-DATABASE_URL = raw_url.strip() if raw_url else "sqlite:///./users.db"
-
-# Second fallback if the stripped URL is empty
-if not DATABASE_URL:
-    DATABASE_URL = "sqlite:///./users.db"
-
-# Fix for Render's Postgres URL start with "postgres://" which SQLAlchemy doesn't like (wants "postgresql://")
+# Get and clean the DATABASE_URL
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db").strip()
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
