@@ -200,7 +200,6 @@ function updateSidebar(item) {
             </div>
             ${factsHtml}
             ${ecologyHtml}
-            ${ecologyHtml}
             ${originHtml}
             ${legendHtml}
             ${wildlifeHtml}
