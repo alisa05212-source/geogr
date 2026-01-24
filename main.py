@@ -68,14 +68,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Session Middleware
-# Senior fix: Render uses HTTPS, so 'https_only' and 'SameSite=Lax' are required for OAuth callbacks
+# Refactored for custom domain: session security automatically scales based on RENDER env var
 app.add_middleware(
     SessionMiddleware, 
     secret_key=SECRET_KEY,
     session_cookie="geogr_session",
     max_age=3600,
     same_site="lax",
-    https_only=True if "onrender.com" in str(os.getenv("DATABASE_URL", "")) or os.getenv("RENDER") else False
+    https_only=True if os.getenv("RENDER") else False
 )
 
 # Static Files & Templates
