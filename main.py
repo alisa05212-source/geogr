@@ -38,12 +38,15 @@ else:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup logic
-    logger.info("Initializing database...")
+    logger.info("Checking database connectivity...")
     try:
         init_db()
-        logger.info("Database initialized successfully.")
+        logger.info("DATABASE: Connected successfully. All tables verified.")
     except Exception as e:
-        logger.error(f"Database initialization failed: {e}")
+        logger.error(f"DATABASE: Connection failed at startup!")
+        logger.error(f"Error Detail: {str(e)}")
+        # In a senior environment, we might want to crash here if the DB is critical
+        # raise e 
     yield
     # Shutdown logic (if needed)
 
