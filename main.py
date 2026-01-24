@@ -70,8 +70,15 @@ async def read_root(request: Request):
 
 @app.get('/login/google')
 async def login_google(request: Request):
-    # Redirect URL must match what you set in Google Console (e.g., http://localhost:8000/auth/google)
+    # Redirect URL must match what you set in Google Console
     redirect_uri = request.url_for('auth_google')
+    
+    # Senior fix: Render/Cloud proxies often report 'http' to FastAPI.
+    # Google OAuth strictly requires 'https' for production redirects.
+    if 'localhost' not in str(request.base_url):
+        redirect_uri = str(redirect_uri).replace('http://', 'https://')
+    
+    logger.info(f"OAuth request redirect_uri: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get('/auth/google')
