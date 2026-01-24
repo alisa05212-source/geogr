@@ -183,13 +183,18 @@ async def debug_config(request: Request):
     # Show how we force https
     forced_https = str(redirect_uri).replace('http://', 'https://') if 'localhost' not in str(request.base_url) else redirect_uri
     
+    # Get DB host from database.py's DATABASE_URL
+    from database import DATABASE_URL
+    db_host = DATABASE_URL.split("@")[-1].split("/")[0] if "@" in DATABASE_URL else "Local/SQLite"
+
     html = f"""
     <h1>Debug Config</h1>
     <p><b>Current Client ID:</b> {masked_id}</p>
-    <p><b>Generated Redirect URI:</b> {redirect_uri}</p>
     <p><b>Forced HTTPS URI:</b> {forced_https}</p>
-    <p><i>Compare 'Current Client ID' with your Google Console ID.</i></p>
-    <p><i>Compare 'Forced HTTPS URI' with your 'Authorized redirect URIs' in Google Console.</i></p>
+    <p><b>Database Host:</b> <span style='color: blue;'>{db_host}</span></p>
+    <hr>
+    <p><i>Check 'Database Host': it MUST end with <b>.frankfurt-postgres.render.com</b></i></p>
+    <p><i>If it doesn't, Render hasn't saved your DATABASE_URL update!</i></p>
     <a href="/">Back to Home</a>
     """
     return html
