@@ -236,10 +236,9 @@ body {
 }
 
 .river-flow {
-    stroke-dasharray: 10, 5;
-    /* Dashes for effect (dash, gap) */
-    animation: dash-flow 30s linear infinite;
-    /* Slow, continuous flow */
+    stroke-dasharray: 12, 6;
+    animation: dash-flow 25s linear infinite;
+    filter: drop-shadow(0 0 2px var(--accent-blue));
 }
 
 /* Pulse for Top Items */
