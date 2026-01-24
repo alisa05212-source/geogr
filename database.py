@@ -8,10 +8,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Check for DATABASE_URL environment variable (from Render/Railway)
-# If not found, fallback to local SQLite
-raw_url = os.getenv("DATABASE_URL", "sqlite:///./users.db")
-# Senior practice: strip whitespaces which often sneak in during copy-paste on Render
-DATABASE_URL = raw_url.strip()
+# If not found or empty, fallback to local SQLite
+raw_url = os.getenv("DATABASE_URL", "")
+DATABASE_URL = raw_url.strip() if raw_url else "sqlite:///./users.db"
+
+# Second fallback if the stripped URL is empty
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///./users.db"
 
 # Fix for Render's Postgres URL start with "postgres://" which SQLAlchemy doesn't like (wants "postgresql://")
 if DATABASE_URL.startswith("postgres://"):
@@ -19,7 +22,8 @@ if DATABASE_URL.startswith("postgres://"):
 
 # Masking password for safe logging
 if "@" in DATABASE_URL:
-    masked_url = DATABASE_URL.split("@")[1]
+    # Use split("@")[-1] to handle cases where the password itself might contain an '@'
+    masked_url = DATABASE_URL.split("@")[-1]
     logger.info(f"Connecting to database at {masked_url} (SSL: required)")
 else:
     logger.info(f"Connecting to database: {DATABASE_URL}")

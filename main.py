@@ -11,13 +11,13 @@ import os
 import logging
 from contextlib import asynccontextmanager
 
+# Configure Logging IMMEDIATELY to capture startup errors
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Database Imports
 from sqlalchemy.orm import Session
 from database import init_db, get_db, User
-
-# Configure Logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # CONFIGURATION
 # Best practice: Read from environment variables, fallback to local hardcoded values
