@@ -21,17 +21,21 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     maxZoom: 19
 }).addTo(map);
 
-// Create Panes
+// Create Panes with better z-index separation
 map.createPane('groundwaterPane');
-map.getPane('groundwaterPane').style.zIndex = 350;
+map.getPane('groundwaterPane').style.zIndex = 250; // Move to background
+
 map.createPane('marshPane');
-map.getPane('marshPane').style.zIndex = 360;
+map.getPane('marshPane').style.zIndex = 300;
+
 map.createPane('waterPane');
-map.getPane('waterPane').style.zIndex = 370;
+map.getPane('waterPane').style.zIndex = 400; // Lakes / Reservoirs
+
 map.createPane('riverPane');
-map.getPane('riverPane').style.zIndex = 380;
+map.getPane('riverPane').style.zIndex = 500; // Rivers - foreground
+
 map.createPane('cityPane');
-map.getPane('cityPane').style.zIndex = 390;
+map.getPane('cityPane').style.zIndex = 600; // Cities - topmost
 
 let layers = {};
 
@@ -57,7 +61,7 @@ function getStyle(item, isHovered) {
     }
     else if (item.type === 'groundwater') {
         weight = 1;
-        fillOpacity = isHovered ? 0.5 : 0.2;
+        fillOpacity = isHovered ? 0.3 : 0.05; // Extremely transparent background
         stroke = false;
     }
     else if (item.type === 'marsh') {
@@ -205,6 +209,7 @@ function updateSidebar(item) {
 }
 
 // Render Water Data
+console.log('Rendering GEO_DATA, items count:', GEO_DATA.length);
 GEO_DATA.forEach(item => {
     try {
         let layer;
