@@ -145,6 +145,26 @@ async def admin_users(db: Session = Depends(get_db)):
     html_content += "</ul>"
     return html_content
 
+@app.get('/debug-config', response_class=HTMLResponse)
+async def debug_config(request: Request):
+    # Masking for safety but enough to verify
+    masked_id = f"{GOOGLE_CLIENT_ID[:15]}...{GOOGLE_CLIENT_ID[-15:]}" if GOOGLE_CLIENT_ID else "NOT SET"
+    redirect_uri = request.url_for('auth_google')
+    
+    # Show how we force https
+    forced_https = str(redirect_uri).replace('http://', 'https://') if 'localhost' not in str(request.base_url) else redirect_uri
+    
+    html = f"""
+    <h1>Debug Config</h1>
+    <p><b>Current Client ID:</b> {masked_id}</p>
+    <p><b>Generated Redirect URI:</b> {redirect_uri}</p>
+    <p><b>Forced HTTPS URI:</b> {forced_https}</p>
+    <p><i>Compare 'Current Client ID' with your Google Console ID.</i></p>
+    <p><i>Compare 'Forced HTTPS URI' with your 'Authorized redirect URIs' in Google Console.</i></p>
+    <a href="/">Back to Home</a>
+    """
+    return html
+
 if __name__ == "__main__":
     print("Starting server at http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000)
