@@ -52,16 +52,19 @@ app = FastAPI(lifespan=lifespan)
 # Global Exception Handler for debugging production 500s
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"GLOBAL ERROR: {type(exc).__name__}: {str(exc)}")
+    import traceback
+    error_detail = traceback.format_exc()
+    logger.error(f"GLOBAL ERROR: {error_detail}")
     return HTMLResponse(
         content=f"""
         <div style='font-family: sans-serif; padding: 20px;'>
             <h1 style='color: #d9534f;'>Global Server Error</h1>
-            <p>We caught an error that bypassed local checks.</p>
-            <pre style='background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto;'>
-{type(exc).__name__}: {str(exc)}
+            <p>Мы обнаружили ошибку, которая обошла локальные проверки. Вот детали для отладки:</p>
+            <pre style='background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 14px; white-space: pre-wrap;'>
+{error_detail}
             </pre>
-            <a href='/'>Return Home</a>
+            <p style='color: #666;'><i>Если вы видите "password authentication failed", проверьте DATABASE_URL в Render.</i></p>
+            <a href='/'>Вернуться на главную</a>
         </div>
         """,
         status_code=500
