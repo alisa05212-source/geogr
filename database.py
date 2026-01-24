@@ -21,25 +21,17 @@ if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Masking password for safe logging
-if "@" in DATABASE_URL:
-    try:
-        # Better extraction of hostname for debugging
-        parts = DATABASE_URL.split("@")
-        if len(parts) > 1:
-            host_part = parts[-1].split("/")[0]
-            logger.info(f"Connecting to database host: {host_part} (Length: {len(host_part)})")
-        else:
-            logger.warning("DATABASE_URL has '@' but is malformed.")
-    except Exception as e:
-        logger.error(f"Failed to parse DATABASE_URL for logging: {e}")
-else:
-    logger.info(f"Connecting to database: {DATABASE_URL}")
+def get_masked_url(url):
+    if "@" in url:
+        return url.split("@")[-1]
+    return url
 
 # Senior fix: Ensure we don't try to connect if the URL is literally "..." or too short
 if len(DATABASE_URL) < 20 and "sqlite" not in DATABASE_URL:
-    logger.error("DANGER: DATABASE_URL looks corrupted or incomplete!")
-    # Fallback to sqlite to at least allow the app to start
+    logger.error(f"DANGER: DATABASE_URL looks corrupted: {DATABASE_URL}")
     DATABASE_URL = "sqlite:///./users.db"
+else:
+    logger.info(f"Connecting to DB host: {get_masked_url(DATABASE_URL)}")
 
 connect_args = {}
 if "sqlite" in DATABASE_URL:
