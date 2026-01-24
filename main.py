@@ -55,18 +55,12 @@ app = FastAPI(lifespan=lifespan)
 # Global Exception Handler for debugging production 500s
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    import traceback
-    error_detail = traceback.format_exc()
-    logger.error(f"GLOBAL ERROR: {error_detail}")
+    logger.error(f"GLOBAL ERROR: {type(exc).__name__}: {str(exc)}")
     return HTMLResponse(
         content=f"""
         <div style='font-family: sans-serif; padding: 20px;'>
-            <h1 style='color: #d9534f;'>Global Server Error</h1>
-            <p>Мы обнаружили ошибку, которая обошла локальные проверки. Вот детали для отладки:</p>
-            <pre style='background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 14px; white-space: pre-wrap;'>
-{error_detail}
-            </pre>
-            <p style='color: #666;'><i>Если вы видите "password authentication failed", проверьте DATABASE_URL в Render.</i></p>
+            <h1 style='color: #d9534f;'>Internal Server Error</h1>
+            <p>Произошла непредвиденная ошибка. Мы уже работаем над её исправлением.</p>
             <a href='/'>Вернуться на главную</a>
         </div>
         """,
@@ -180,30 +174,6 @@ async def admin_users(db: Session = Depends(get_db)):
     html_content += "</ul>"
     return html_content
 
-@app.get('/debug-config', response_class=HTMLResponse)
-async def debug_config(request: Request):
-    # Masking for safety but enough to verify
-    masked_id = f"{GOOGLE_CLIENT_ID[:15]}...{GOOGLE_CLIENT_ID[-15:]}" if GOOGLE_CLIENT_ID else "NOT SET"
-    redirect_uri = request.url_for('auth_google')
-    
-    # Show how we force https
-    forced_https = str(redirect_uri).replace('http://', 'https://') if 'localhost' not in str(request.base_url) else redirect_uri
-    
-    # Get DB host from database.py's DATABASE_URL
-    from database import DATABASE_URL
-    db_host = DATABASE_URL.split("@")[-1].split("/")[0] if "@" in DATABASE_URL else "Local/SQLite"
-
-    html = f"""
-    <h1>Debug Config</h1>
-    <p><b>Current Client ID:</b> {masked_id}</p>
-    <p><b>Forced HTTPS URI:</b> {forced_https}</p>
-    <p><b>Database Host:</b> <span style='color: blue;'>{db_host}</span></p>
-    <hr>
-    <p><i>Check 'Database Host': it MUST end with <b>.frankfurt-postgres.render.com</b></i></p>
-    <p><i>If it doesn't, Render hasn't saved your DATABASE_URL update!</i></p>
-    <a href="/">Back to Home</a>
-    """
-    return html
 
 if __name__ == "__main__":
     print("Starting server at http://localhost:8000")
