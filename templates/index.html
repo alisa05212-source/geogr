@@ -69,9 +69,15 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h1>Водний Атлас <span
-                        style="font-size:0.8rem; background: var(--accent-blue); padding: 2px 6px; border-radius: 4px; vertical-align: middle; opacity: 0.8;">v4.0</span>
+                        style="font-size:0.8rem; background: var(--accent-blue); padding: 2px 6px; border-radius: 4px; vertical-align: middle; opacity: 0.8;">v5.0</span>
                 </h1>
                 <p>Річки • Озера • Підземні води</p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Пошук (напр. Оріль, Псел)..." autocomplete="off">
+                <div id="search-results" class="search-results-dropdown"></div>
             </div>
 
             <!-- Filters -->
@@ -100,8 +106,8 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script src="/static/js/data.js?v=4"></script>
-    <script src="/static/js/app.js?v=4"></script>
+    <script src="/static/js/data.js?v=5"></script>
+    <script src="/static/js/app.js?v=5"></script>
 </body>
 
 </html>

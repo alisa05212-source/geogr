@@ -208,7 +208,13 @@ function updateSidebar(item) {
 }
 
 // Render Water Data
-console.log('Rendering GEO_DATA, items count:', GEO_DATA.length);
+console.group('🔍 HydroAtlas Diagnostics');
+console.log('Total items in GEO_DATA:', GEO_DATA.length);
+console.log('Rivers count:', GEO_DATA.filter(x => x.type === 'river').length);
+console.log('Lakes/Reservoirs count:', GEO_DATA.filter(x => x.type === 'lake' || x.type === 'reservoir').length);
+console.table(GEO_DATA.filter(x => x.type === 'river').map(r => ({ id: r.id, name: r.name, points: r.path ? r.path.length : 0 })));
+console.groupEnd();
+
 GEO_DATA.forEach(item => {
     try {
         let layer;
@@ -381,6 +387,70 @@ map.on('click', function (e) {
         toggleMobileSidebar(false);
     }
 });
+
+// --- SEARCH LOGIC ---
+const searchInput = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        const filtered = GEO_DATA.filter(item =>
+            item.name.toLowerCase().includes(query) ||
+            (item.description && item.description.toLowerCase().includes(query))
+        ).slice(0, 10); // Limit results
+
+        if (filtered.length > 0) {
+            searchResults.innerHTML = filtered.map(item => `
+                <div class="search-result-item" onclick="handleSearchSelect('${item.id}')">
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-type">${item.type === 'river' ? 'річка' : item.type === 'lake' ? 'озеро' : 'об\'єкт'}</span>
+                </div>
+            `).join('');
+            searchResults.style.display = 'block';
+        } else {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    // Close results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container')) {
+            searchResults.style.display = 'none';
+        }
+    });
+}
+
+window.handleSearchSelect = function (id) {
+    const item = GEO_DATA.find(x => x.id === id);
+    const layer = layers[id];
+
+    if (!item || !layer) return;
+
+    // Reset dropdown
+    searchInput.value = '';
+    searchResults.style.display = 'none';
+
+    // Show details
+    updateSidebar(item);
+    toggleMobileSidebar(true);
+
+    // Visual feedback
+    layer.fire('mouseover');
+    setTimeout(() => layer.fire('mouseout'), 2000);
+
+    // Move camera
+    if (item.path) {
+        map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 10 });
+    } else if (item.center) {
+        map.flyTo(item.center, 10);
+    }
+};
 
 // Initial State
 if (isMobile()) {
