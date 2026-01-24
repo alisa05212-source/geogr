@@ -49,15 +49,33 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Global Exception Handler for debugging production 500s
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"GLOBAL ERROR: {type(exc).__name__}: {str(exc)}")
+    return HTMLResponse(
+        content=f"""
+        <div style='font-family: sans-serif; padding: 20px;'>
+            <h1 style='color: #d9534f;'>Global Server Error</h1>
+            <p>We caught an error that bypassed local checks.</p>
+            <pre style='background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto;'>
+{type(exc).__name__}: {str(exc)}
+            </pre>
+            <a href='/'>Return Home</a>
+        </div>
+        """,
+        status_code=500
+    )
+
 # Session Middleware
-# Senior fix: Ensure session cookies are Secure and use SameSite=Lax for OAuth callbacks on Render
+# Senior fix: Render uses HTTPS, so 'https_only' and 'SameSite=Lax' are required for OAuth callbacks
 app.add_middleware(
     SessionMiddleware, 
     secret_key=SECRET_KEY,
     session_cookie="geogr_session",
-    max_age=3600,  # 1 hour
+    max_age=3600,
     same_site="lax",
-    https_only=True if GOOGLE_CLIENT_ID and "localhost" not in GOOGLE_CLIENT_ID else False # Logic is a bit flawed here, let's just use environment check
+    https_only=True if "onrender.com" in str(os.getenv("DATABASE_URL", "")) or os.getenv("RENDER") else False
 )
 
 # Static Files & Templates
