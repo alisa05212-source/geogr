@@ -7,33 +7,44 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 
-# Check for DATABASE_URL environment variable (from Render/Railway)
-# If not found or empty, fallback to local SQLite
-raw_url = os.getenv("DATABASE_URL", "")
 # Get and clean the DATABASE_URL
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db").strip()
+raw_url = os.getenv("DATABASE_URL", "sqlite:///./users.db")
+DATABASE_URL = raw_url.strip() if raw_url else "sqlite:///./users.db"
+
+# Format fix for SQLAlchemy
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Senior fix: Auto-patch Render's short hostnames to include regional suffix
+# This prevents "could not resolve host" and ensures we use external access correctly
+if "dpg-" in DATABASE_URL and ".render.com" not in DATABASE_URL:
+    # Find the host part (after @ and before /)
+    if "@" in DATABASE_URL:
+        pre_host, post_host = DATABASE_URL.split("@", 1)
+        host_and_path = post_host.split("/", 1)
+        host = host_and_path[0]
+        # Append Frankfurt suffix if it's a Render DB ID
+        if host.startswith("dpg-") and ".frankfurt-postgres.render.com" not in host:
+            new_host = host + ".frankfurt-postgres.render.com"
+            DATABASE_URL = f"{pre_host}@{new_host}/{host_and_path[1]}"
+
+# Senior fix: Ensure SSL is required for cloud databases
+connect_args = {}
+if "sqlite" not in DATABASE_URL:
+    connect_args = {"sslmode": "require"}
+    # Also add it to the URL query string for safety
+    if "sslmode=" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require" if "?" not in DATABASE_URL else "&sslmode=require"
+
 # Masking password for safe logging
 def get_masked_url(url):
-    if "@" in url:
-        return url.split("@")[-1]
-    return url
+    try:
+        if "@" in url:
+            return url.split("@")[-1].split("?")[0] # Show host only
+        return "sqlite"
+    except: return "error"
 
-# Senior fix: Ensure we don't try to connect if the URL is literally "..." or too short
-if len(DATABASE_URL) < 20 and "sqlite" not in DATABASE_URL:
-    logger.error(f"DANGER: DATABASE_URL looks corrupted: {DATABASE_URL}")
-    DATABASE_URL = "sqlite:///./users.db"
-else:
-    logger.info(f"Connecting to DB host: {get_masked_url(DATABASE_URL)}")
-
-connect_args = {}
-if "sqlite" in DATABASE_URL:
-    connect_args = {"check_same_thread": False}
-else:
-    # Render (and most cloud Postgres) requires SSL
-    connect_args = {"sslmode": "require"}
+logger.info(f"Connecting to DB: {get_masked_url(DATABASE_URL)}")
 
 # pool_pre_ping=True is essential for cloud DBs to handle dropped connections automatically
 engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
