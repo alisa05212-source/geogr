@@ -98,17 +98,19 @@ async def login_google(request: Request):
 @app.get('/auth/google')
 async def auth_google(request: Request, db: Session = Depends(get_db)):
     try:
+        logger.info("Handling Google OAuth callback...")
         token = await oauth.google.authorize_access_token(request)
         user_info = token.get('userinfo')
         if not user_info:
-             # If using new Google Auth flow sometimes user info is in 'id_token' claims
              user_info = await oauth.google.parse_id_token(request, token)
+        
+        logger.info(f"User authenticated: {user_info.get('email')}")
         
         # Check if user exists in DB
         db_user = db.query(User).filter(User.google_id == user_info['sub']).first()
         
         if not db_user:
-            # Create new user
+            logger.info("Creating new user in database...")
             new_user = User(
                 google_id=user_info['sub'],
                 email=user_info.get('email'),
@@ -127,9 +129,18 @@ async def auth_google(request: Request, db: Session = Depends(get_db)):
             'email': db_user.email,
             'id': db_user.id
         }
-    except OAuthError as error:
-        return HTMLResponse(f"<h1>Auth Error</h1><p>{error.error}</p>")
-    return RedirectResponse(url='/')
+        logger.info("Session stored successfully.")
+        return RedirectResponse(url='/')
+
+    except Exception as e:
+        logger.error(f"Error during OAuth callback: {str(e)}")
+        # Senior move: return the error to the screen for easy debugging in production
+        return HTMLResponse(f"""
+            <h1>Internal Server Error</h1>
+            <p>Something went wrong during login.</p>
+            <pre style='background: #eee; padding: 10px;'>{type(e).__name__}: {str(e)}</pre>
+            <a href='/'>Return to Home</a>
+        """)
 
 @app.get('/logout')
 async def logout(request: Request):
