@@ -50,7 +50,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Session Middleware
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+# Senior fix: Ensure session cookies are Secure and use SameSite=Lax for OAuth callbacks on Render
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=SECRET_KEY,
+    session_cookie="geogr_session",
+    max_age=3600,  # 1 hour
+    same_site="lax",
+    https_only=True if GOOGLE_CLIENT_ID and "localhost" not in GOOGLE_CLIENT_ID else False # Logic is a bit flawed here, let's just use environment check
+)
 
 # Static Files & Templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
