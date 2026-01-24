@@ -1,3 +1,4 @@
+# Force Re-deploy (Syncing Map Data)
 services:
   - type: web
     name: geogr-app
