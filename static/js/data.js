@@ -120,4 +120,25 @@ const GEO_DATA = [
     { id: "mlynky_cave", type: "cave", name: "Печера Млинки", length: "52 км", description: "Екстремальна лабіринтова печера.", color: GROUND_COLOR, center: [48.95, 25.87], radius: 2000 },
     { id: "crystal_cave", type: "cave", name: "Кришталева печера", description: "Знаменита гіпсовими кристалами.", color: GROUND_COLOR, center: [48.68, 26.08], radius: 1500 },
     { id: "vertebrate_cave", type: "cave", name: "Печера Вертеба", description: "Печера-музей трипільської культури.", color: GROUND_COLOR, center: [48.79, 25.88], radius: 1800 },
+
+    // === ADDITIONAL RIVERS ===
+    { id: "uzh_zh", type: "river", name: "Уж (Житомирщина)", length: "256 км", description: "Права притока Прип'яті через Коростень.", color: RIVER_COLOR, path: [[50.8, 29.0], [51.0, 29.3], [51.2, 29.1], [51.4, 28.8], [51.6, 28.5]] },
+    { id: "latoritsa", type: "river", name: "Латориця", length: "188 км", description: "Закарпатська річка з мальовничою долиною.", color: "#818cf8", path: [[48.4, 22.3], [48.5, 22.7], [48.55, 23.1]] },
+    { id: "uzh_zak", type: "river", name: "Уж (Закарпаття)", length: "127 км", description: "Річка, що протікає через Ужгород.", color: "#818cf8", path: [[48.6, 22.3], [48.62, 22.5], [48.85, 22.8]] },
+    { id: "molochna", type: "river", name: "Молочна", length: "197 км", description: "Річка Запорізької області, впадає в Молочний лиман.", color: RIVER_COLOR, path: [[47.5, 35.8], [47.2, 35.5], [46.8, 35.3], [46.5, 35.3]] },
+    { id: "berda", type: "river", name: "Берда", length: "125 км", description: "Річка Приазов'я з порогами.", color: RIVER_COLOR, path: [[47.4, 36.8], [47.1, 36.5], [46.8, 36.2]] },
+    { id: "kinska", type: "river", name: "Кінська", length: "178 км", description: "Права притока Дніпра на Запоріжжі.", color: RIVER_COLOR, path: [[47.8, 35.5], [47.5, 35.2], [47.3, 34.9], [47.1, 34.5]] },
+    { id: "lopan", type: "river", name: "Лопань", length: "96 км", description: "Річка, що протікає через центр Харкова.", color: RIVER_COLOR, path: [[50.3, 36.3], [50.1, 36.25], [49.95, 36.23]] },
+    { id: "ingulets_small", type: "river", name: "Базавлук", length: "137 км", description: "Ліва притока Інгульця.", color: RIVER_COLOR, path: [[47.8, 33.5], [47.5, 33.8], [47.3, 34.0]] },
+    { id: "irpin", type: "river", name: "Ірпінь", length: "162 км", description: "Права притока Дніпра біля Києва, історичне місце.", color: RIVER_COLOR, path: [[50.2, 29.5], [50.35, 29.8], [50.45, 30.1], [50.52, 30.35]] },
+    { id: "udai", type: "river", name: "Удай", length: "327 км", description: "Ліва притока Сули через Пирятин.", color: RIVER_COLOR, path: [[50.5, 32.5], [50.3, 32.3], [50.0, 32.5], [49.7, 32.7]] },
+
+    // === ADDITIONAL LAKES ===
+    { id: "pisochne", type: "lake", name: "Пісочне озеро", area: "0.8 км²", description: "Чисте озеро біля Чернігова.", color: LAKE_COLOR, center: [51.45, 31.35], radius: 1000 },
+    { id: "blue_oleshky", type: "lake", name: "Голубі озера Олешшя", tags: ["top"], description: "Бірюзові кар'єри у Херсонській області.", color: LAKE_COLOR, center: [46.62, 32.78], radius: 2500 },
+    { id: "svitle", type: "lake", name: "Озеро Світле", description: "Прозоре озеро на Волині.", color: LAKE_COLOR, center: [51.42, 23.95], radius: 1500 },
+    { id: "biloozero", type: "lake", name: "Біле озеро (Рівненщина)", area: "4.7 км²", description: "Одне з найчистіших карстових озер.", color: LAKE_COLOR, center: [51.11, 26.18], radius: 2000 },
+    { id: "katlabuh", type: "lake", name: "Катлабух", area: "68 км²", description: "Прісноводне озеро на Одещині.", color: LAKE_COLOR, center: [45.53, 28.72], radius: 5500 },
+    { id: "molochnyi_liman", type: "lake", name: "Молочний лиман", area: "168 км²", description: "Солоний лиман Приазов'я.", color: SALT_COLOR, center: [46.58, 35.35], radius: 9000 },
+    { id: "utlyuk_liman", type: "lake", name: "Утлюцький лиман", area: "70 км²", description: "Мілководний лиман, місце гніздування птахів.", color: SALT_COLOR, center: [46.35, 35.05], radius: 6000 },
 ];

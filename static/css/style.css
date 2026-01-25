@@ -321,6 +321,28 @@ body {
     filter: drop-shadow(0 0 2px var(--accent-blue));
 }
 
+/* Lake Glow Animation */
+@keyframes lake-pulse {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8));
+    }
+}
+
+.lake-glow {
+    animation: lake-pulse 4s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.lake-glow:hover {
+    filter: drop-shadow(0 0 20px rgba(56, 189, 248, 1)) !important;
+}
+
 /* Pulse for Top Items */
 @keyframes pulse-ring {
     0% {
