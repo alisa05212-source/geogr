@@ -61,16 +61,17 @@ function getStyle(item, isHovered) {
     }
     else if (item.type === 'groundwater') {
         weight = 1;
-        fillOpacity = isHovered ? 0.3 : 0.05; // Extremely transparent background
+        fillOpacity = isHovered ? 0.5 : 0.25; // Increased visibility for senior-level clarity
         stroke = false;
     }
     else if (item.type === 'marsh') {
-        weight = 0;
-        fillOpacity = isHovered ? 0.6 : 0.4;
+        weight = 1;
+        fillOpacity = isHovered ? 0.8 : 0.6; // Swamps must be clearly visible
+        opacity = 0.8;
     }
     else if (item.type === 'cave') {
-        weight = isHovered ? 10 : 5;
-        fillOpacity = 1;
+        weight = isHovered ? 12 : 6;
+        fillOpacity = 0.9;
     }
 
     if (item.tags && item.tags.includes('top')) {

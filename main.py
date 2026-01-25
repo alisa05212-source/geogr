@@ -12,8 +12,13 @@ import logging
 from contextlib import asynccontextmanager
 
 # Configure Logging IMMEDIATELY to capture startup errors
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
+
+from fastapi.middleware.proxy_headers import ProxyHeadersMiddleware
 
 # Database Imports
 from sqlalchemy.orm import Session
@@ -26,14 +31,19 @@ raw_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
 GOOGLE_CLIENT_ID = raw_client_id.strip()
 GOOGLE_CLIENT_SECRET = raw_client_secret.strip()
-SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32)).strip()
+SECRET_KEY = os.getenv("SECRET_KEY", "").strip()
+
+# Senior check: If SECRET_KEY is missing in PRODUCTION, this is a critical failure.
+if not SECRET_KEY:
+    if os.getenv("RENDER"):
+        logger.critical("SECRET_KEY IS MISSING IN RENDER ENVIRONMENT! Sessions will be unstable.")
+    SECRET_KEY = "fallback-unstable-key-change-me" # Fallback for local dev only
 
 # Defensive check for production
 if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
     logger.error("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in environment!")
 else:
-    # Senior practice: Log masked ID to verify the correct project is used
-    logger.info(f"OAuth configured with Client ID: {GOOGLE_CLIENT_ID[:10]}...{GOOGLE_CLIENT_ID[-10:]}")
+    logger.info(f"OAuth configured with Client ID: {GOOGLE_CLIENT_ID[:5]}...{GOOGLE_CLIENT_ID[-5:]}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -67,15 +77,19 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500
     )
 
+# Middleware stack - Order matters: ProxyHeaders should be at the top
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 # Session Middleware
-# Refactored for custom domain: session security automatically scales based on RENDER env var
+# Renaming to v3 to force-clear any old/broken cookies in user browsers
 app.add_middleware(
     SessionMiddleware, 
     secret_key=SECRET_KEY,
-    session_cookie="geogr_session",
+    session_cookie="geogr_session_v3",
     max_age=3600,
     same_site="lax",
-    https_only=True if os.getenv("RENDER") else False
+    https_only=True if (os.getenv("RENDER") or os.getenv("SECURE_COOKIES")) else False,
+    path="/"
 )
 
 # Static Files & Templates
@@ -102,15 +116,21 @@ async def read_root(request: Request):
 
 @app.get('/login/google')
 async def login_google(request: Request):
-    # Redirect URL must match what you set in Google Console
-    redirect_uri = request.url_for('auth_google')
-    
-    # Senior fix: Render/Cloud proxies often report 'http' to FastAPI.
     # Google OAuth strictly requires 'https' for production redirects.
-    if 'localhost' not in str(request.base_url):
-        redirect_uri = str(redirect_uri).replace('http://', 'https://')
+    # High-level fix: ensure redirect_uri is absolutely consistent with what Google expects.
+    base_url = str(request.base_url)
     
-    logger.info(f"OAuth request redirect_uri: {redirect_uri}")
+    # Force HTTPS for production/Render
+    if os.getenv("RENDER") and base_url.startswith("http://"):
+        base_url = base_url.replace("http://", "https://")
+    
+    redirect_uri = f"{base_url.rstrip('/')}/auth/google"
+    
+    logger.info(f"OAuth: Initiating login. base_url: {base_url} | redirect_uri: {redirect_uri}")
+    
+    # We clear the session BEFORE login to start fresh
+    request.session.clear()
+    
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @app.get('/auth/google')
@@ -147,7 +167,7 @@ async def auth_google(request: Request, db: Session = Depends(get_db)):
             'email': db_user.email,
             'id': db_user.id
         }
-        logger.info("Session stored successfully.")
+        logger.info(f"OAuth: Login successful for {db_user.email}. Session keys: {list(request.session.keys())}")
         return RedirectResponse(url='/')
 
     except Exception as e:

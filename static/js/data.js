@@ -4,10 +4,11 @@
  * Format: [Lat, Lng]
  */
 
-const RIVER_COLOR = "#0ea5e9"; // Official Atlas Blue
-const LAKE_COLOR = "#06b6d4";  // Freshwater Teal
-const SALT_COLOR = "#db2777";  // Salty Pink
-const GROUND_COLOR = "#a855f7"; // Aquifer Purple
+const RIVER_COLOR = "#0ea5e9";  // Official Atlas Blue
+const LAKE_COLOR = "#38bdf8";   // Brighter Freshwater Blue
+const SALT_COLOR = "#f472b6";   // Vivid Pink for Salty Waters
+const GROUND_COLOR = "#c084fc"; // Brighter Aquifer Purple
+const MARSH_COLOR = "#4ade80";  // Emerald Green for Swamps
 
 const CITIES = [
     { name: "Київ", coords: [50.45, 30.52], type: "city", description: "Столиця України на Дніпрі." },
@@ -118,7 +119,15 @@ const GEO_DATA = [
     { id: "kremenchuk_res", type: "reservoir", name: "Кременчуцьке", color: "#2563eb", path: [[49.5, 32.0], [49.2, 33.0], [49.6, 32.2]] },
     { id: "kakhovka_res", type: "reservoir", name: "Каховське", color: "#2563eb", path: [[47.7, 35.1], [46.8, 33.4], [47.4, 34.8]] },
 
-    // === AQUIFERS (GROUNDWATER) ===
     { id: "dnipro_basin", type: "groundwater", name: "Дніпровський басейн", color: GROUND_COLOR, path: [[51.8, 31.0], [51.5, 33.5], [50.5, 35.5], [49.0, 36.5], [48.0, 35.0], [48.5, 33.0], [49.5, 31.0], [51.0, 30.5], [51.8, 31.0]] },
     { id: "volyn_basin", type: "groundwater", name: "Волино-Подільський", color: GROUND_COLOR, path: [[51.8, 23.5], [51.8, 27.0], [50.0, 27.5], [48.5, 24.5], [51.8, 23.5]] },
+
+    // === SWAMPS (NEW) ===
+    { id: "pripyat_swamps", type: "marsh", name: "Прип'ятські болота", area: "98 000 км²", color: MARSH_COLOR, path: [[51.6, 24.0], [52.0, 25.0], [52.1, 27.0], [51.8, 29.0], [51.4, 30.0], [51.2, 28.0], [51.3, 26.0]] },
+    { id: "bile_swamp", type: "marsh", name: "Болото Біле", color: MARSH_COLOR, center: [51.48, 26.15], radius: 4500 },
+
+    // === KARST & CAVES (NEW) ===
+    { id: "optimistic_cave", type: "cave", name: "Печера Оптимістична", tags: ["top"], length: "267 км", description: "Найдовша гіпсова печера у світі.", color: GROUND_COLOR, center: [48.73, 25.97], radius: 3000 },
+    { id: "mlynky_cave", type: "cave", name: "Печера Млинки", length: "52 км", color: GROUND_COLOR, center: [48.95, 25.87], radius: 2000 },
+    { id: "crystal_cave", type: "cave", name: "Кришталева печера", description: "Відома своїми гіпсовими кристалами.", color: GROUND_COLOR, center: [48.68, 26.08], radius: 1500 },
 ];
