@@ -61,13 +61,15 @@ function getStyle(item, isHovered) {
     }
     else if (item.type === 'groundwater') {
         weight = 1;
-        fillOpacity = isHovered ? 0.5 : 0.25; // Increased visibility for senior-level clarity
+        // Senior fix: Boosted permanent visibility for high-contrast dark map
+        fillOpacity = isHovered ? 0.65 : 0.45;
         stroke = false;
     }
     else if (item.type === 'marsh') {
-        weight = 1;
-        fillOpacity = isHovered ? 0.8 : 0.6; // Swamps must be clearly visible
-        opacity = 0.8;
+        weight = 2;
+        // Senior fix: Swamps must be an undeniable visual feature
+        fillOpacity = isHovered ? 0.9 : 0.7;
+        opacity = 0.9;
     }
     else if (item.type === 'cave') {
         weight = isHovered ? 12 : 6;
