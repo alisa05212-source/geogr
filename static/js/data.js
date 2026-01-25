@@ -25,154 +25,63 @@ const GEO_DATA = [
     // === MAJOR ARTERIES ===
     {
         id: "dnipro", type: "river", name: "Дніпро", tags: ["top"], length: "2 201 км",
-        description: "Головна річка України.", color: RIVER_COLOR,
+        description: "Головна річка України, символ державності.", color: RIVER_COLOR,
+        facts: ["Третя за довжиною річка Європи.", "Має 6 величезних водосховищ.", "Згадується як Борисфен у прадавніх греків."],
         path: [[51.9, 30.6], [51.5, 30.5], [51.2, 30.45], [50.9, 30.4], [50.6, 30.45], [50.5, 30.5], [50.4, 30.55], [50.3, 30.6], [50.0, 31.0], [49.8, 31.2], [49.6, 31.4], [49.4, 31.9], [49.3, 32.2], [49.2, 32.5], [49.1, 33.0], [48.9, 33.5], [48.8, 34.0], [48.6, 34.3], [48.5, 34.6], [48.45, 35.0], [48.4, 35.1], [48.2, 35.15], [48.0, 35.1], [47.8, 35.0], [47.5, 34.8], [47.3, 34.4], [47.1, 34.0], [47.0, 33.6], [46.8, 33.3], [46.7, 33.0], [46.45, 32.1]]
     },
     {
         id: "dnister", type: "river", name: "Дністер", tags: ["top"], length: "1 362 км",
-        description: "Дністровський каньйон - одне з 7 чудес України.", color: RIVER_COLOR,
+        description: "Дністровський каньйон — одне з 7 природних чудес України.", color: RIVER_COLOR,
+        facts: ["Довжина каньйону близько 250 км.", "Протікає через територію України та Молдови."],
         path: [[49.2, 22.8], [49.4, 23.6], [49.2, 24.3], [49.0, 24.8], [48.8, 25.4], [48.6, 26.2], [48.5, 27.0], [48.5, 27.8], [48.0, 28.3], [47.5, 28.8], [47.0, 29.5], [46.3, 30.3]]
     },
+    { id: "pivdenny_bug", type: "river", name: "Південний Буг", length: "806 км", description: "Єдина велика річка, що повністю протікає територією України.", color: RIVER_COLOR, path: [[49.6, 26.5], [49.4, 27.2], [49.3, 28.0], [49.2, 28.55], [49.0, 28.7], [48.6, 29.2], [48.2, 30.0], [47.8, 31.1], [47.3, 31.5], [46.9, 32.0]] },
+
+    // === DNIEPER SYSTEM ===
+    { id: "desna", type: "river", name: "Десна", length: "1130 км", description: "Найбільша ліва притока Дніпра.", color: RIVER_COLOR, path: [[52.2, 33.3], [51.9, 33.0], [51.6, 32.5], [51.4, 31.8], [51.2, 31.0], [50.55, 30.55]] },
+    { id: "horyn", type: "river", name: "Горинь", length: "659 км", description: "Права притока Прип'яті.", color: RIVER_COLOR, path: [[50.0, 25.8], [50.5, 26.4], [51.2, 26.6], [51.8, 26.8], [52.0, 26.9]] },
+    { id: "vorskla", type: "river", name: "Ворскла", length: "464 км", description: "Ліва притока Дніпра, протікає через Полтаву.", color: RIVER_COLOR, path: [[50.5, 35.8], [50.2, 35.5], [49.8, 35.0], [49.5, 34.5], [49.0, 34.2], [48.8, 34.1]] },
+    { id: "psel", type: "river", name: "Псел", length: "717 км", description: "Одна з найчистіших річок України.", color: RIVER_COLOR, path: [[51.0, 35.0], [50.5, 34.5], [50.0, 34.0], [49.5, 33.8], [49.0, 33.5]] },
+
+    // === RESERVOIRS (FULL DNIEPER CASCADE) ===
+    { id: "kyiv_res", type: "reservoir", name: "Київське водосховище", tags: ["top"], area: "922 км²", description: "Відоме як 'Київське море'. Популярне місце відпочинку.", color: "#2563eb", path: [[50.55, 30.5], [51.0, 30.45], [51.15, 30.6], [50.8, 30.7], [50.55, 30.5]] },
+    { id: "kaniv_res", type: "reservoir", name: "Канівське водосховище", area: "675 км²", description: "Тут розташований Канівський природний заповідник.", color: "#2563eb", path: [[50.4, 30.6], [49.8, 31.2], [49.75, 31.4], [50.3, 30.8]] },
+    { id: "kremenchuk_res", type: "reservoir", name: "Кременчуцьке водосховище", area: "2250 км²", description: "Найбільше за площею водосховище в Україні.", color: "#2563eb", path: [[49.5, 32.0], [49.2, 33.0], [48.9, 33.2], [49.6, 32.2]] },
+    { id: "kamianske_res", type: "reservoir", name: "Кам'янське водосховище", area: "567 км²", description: "Забезпечує водою значну частину промвузла Дніпра.", color: "#2563eb", path: [[48.9, 33.5], [48.55, 34.3], [48.65, 34.5]] },
+    { id: "dnipro_res", type: "reservoir", name: "Дніпровське водосховище", area: "410 км²", description: "Утворене греблею ДніпроГЕСу в Запоріжжі.", color: "#2563eb", path: [[48.5, 35.0], [47.85, 35.1], [48.1, 35.2]] },
+    { id: "kakhovka_res_rem", type: "reservoir", name: "Каховське (історичне)", area: "2155 км²", description: "Об'єкт екологічної катастрофи. Зараз відновлюється як екосистема.", color: "#3b82f6", path: [[47.7, 35.1], [46.85, 33.4], [47.4, 34.8]] },
+
+    // === GROUNDWATER (ULTRASENSITIVE AQUIFERS) ===
+    { id: "dnipro_basin", type: "groundwater", name: "Дніпровський артезіанський басейн", description: "Найбільше джерело питної води в країні.", color: GROUND_COLOR, path: [[51.8, 31.0], [51.5, 33.5], [50.5, 35.5], [49.0, 36.5], [48.0, 35.0], [48.5, 33.0], [49.5, 31.0], [51.0, 30.5], [51.8, 31.0]] },
+    { id: "volyn_basin", type: "groundwater", name: "Волино-Подільський басейн", description: "Забезпечує чисту воду для всього західного регіону.", color: GROUND_COLOR, path: [[51.8, 23.5], [51.8, 27.0], [50.0, 27.5], [48.5, 24.5], [51.8, 23.5]] },
+    { id: "donets_basin", type: "groundwater", name: "Дніпровсько-Донецький басейн", description: "Величезний артезіанський резервуар під Донеччиною та Харківщиною.", color: GROUND_COLOR, path: [[50.5, 36.5], [50.0, 39.0], [48.5, 39.5], [48.0, 37.0], [49.0, 35.5]] },
+    { id: "blacksea_basin", type: "groundwater", name: "Причорноморський басейн", description: "Резервуар пресних і слабосолоних вод півдня України.", color: GROUND_COLOR, path: [[47.5, 30.0], [47.0, 33.0], [46.5, 34.5], [46.0, 33.0], [46.5, 30.0]] },
+
+    // === LAKES: SHATSK GROUP (VOLYN) ===
     {
-        id: "pivdenny_bug", type: "river", name: "Південний Буг", length: "806 км",
-        description: "Мигійські пороги, рафтинг.", color: RIVER_COLOR,
-        path: [[49.6, 26.5], [49.4, 27.2], [49.3, 28.0], [49.2, 28.55], [49.0, 28.7], [48.6, 29.2], [48.2, 30.0], [47.8, 31.1], [47.3, 31.5], [46.9, 32.0]]
+        id: "svityaz", type: "lake", name: "Світязь", tags: ["top"], area: "26.2 км²", depth: "58 м",
+        description: "Найглибше озеро України, 'Український Байкал'.", color: LAKE_COLOR,
+        facts: ["Вода містить срібло та гліцерин.", "Прозорість води до 8 метрів."],
+        center: [51.50, 23.85], radius: 5000
     },
+    { id: "lyutsymir", type: "lake", name: "Люцимир", area: "4.43 км²", description: "Третє за площею серед Шацьких озер. Вода багата на йод і магній.", color: LAKE_COLOR, center: [51.48, 23.93], radius: 2200 },
+    { id: "peremut", type: "lake", name: "Перемут", area: "1.5 км²", description: "Загадкове озеро з мутистим дном, оточене густим лісом.", color: LAKE_COLOR, center: [51.55, 23.95], radius: 1300 },
 
-    // === DNIEPER SYSTEM (LEFT BANK) ===
-    { id: "desna", type: "river", name: "Десна", length: "1130 км", color: RIVER_COLOR, path: [[52.2, 33.3], [51.9, 33.0], [51.6, 32.5], [51.4, 31.8], [51.2, 31.0], [50.55, 30.55]] },
-    { id: "seim", type: "river", name: "Сейм", length: "748 км", color: RIVER_COLOR, path: [[51.6, 35.5], [51.4, 34.5], [51.4, 33.5], [51.45, 32.7]] },
-    { id: "snov", type: "river", name: "Снов", length: "253 км", color: RIVER_COLOR, path: [[52.2, 32.0], [51.9, 31.9], [51.5, 31.6]] },
-    { id: "oster", type: "river", name: "Остер", length: "199 км", color: RIVER_COLOR, path: [[51.1, 31.9], [50.9, 31.5], [50.9, 30.9]] },
-    { id: "trubizh", type: "river", name: "Трубіж", length: "113 км", color: RIVER_COLOR, path: [[50.5, 31.2], [50.3, 31.4], [50.0, 31.5]] },
-    { id: "supiy", type: "river", name: "Супій", length: "144 км", color: RIVER_COLOR, path: [[50.4, 31.8], [50.1, 31.9], [49.8, 32.0]] },
-    { id: "sula", type: "river", name: "Сула", length: "363 км", color: RIVER_COLOR, path: [[50.8, 33.5], [50.5, 33.2], [50.2, 33.0], [49.8, 32.8], [49.5, 32.7]] },
-    { id: "psel", type: "river", name: "Псел", length: "717 км", color: RIVER_COLOR, path: [[51.0, 35.0], [50.5, 34.5], [50.0, 34.0], [49.5, 33.8], [49.0, 33.5]] },
-    { id: "khorol", type: "river", name: "Хорол", length: "308 км", color: RIVER_COLOR, path: [[50.3, 33.5], [50.0, 33.6], [49.7, 33.4], [49.4, 33.5]] },
-    { id: "vorskla", type: "river", name: "Ворскла", length: "464 км", color: RIVER_COLOR, path: [[50.5, 35.8], [50.2, 35.5], [49.8, 35.0], [49.5, 34.5], [49.0, 34.2], [48.8, 34.1]] },
-    { id: "oril", type: "river", name: "Оріль", length: "346 км", color: RIVER_COLOR, path: [[49.1, 35.5], [48.9, 35.0], [48.7, 34.6]] },
-    { id: "samara", type: "river", name: "Самара", length: "320 км", color: RIVER_COLOR, path: [[48.8, 36.5], [48.6, 36.0], [48.5, 35.5], [48.45, 35.1]] },
-    { id: "vovcha_samara", type: "river", name: "Вовча", length: "323 км", color: RIVER_COLOR, path: [[48.0, 37.5], [48.1, 36.8], [48.3, 36.2], [48.5, 35.8]] },
+    // === LAKES: CENTRAL UKRAINE & SPECIAL GEMS ===
+    { id: "lake_buchak", type: "lake", name: "Озеро Бучак", description: "Атмосферний водоєм на місці недобудованої ГАЕС. Вважається 'місцем сили'.", color: LAKE_COLOR, center: [49.86, 31.42], radius: 1500 },
+    { id: "cherepashyntsi", type: "lake", name: "Черепашинецький кар'єр", tags: ["top"], description: "'Вінницькі Мальдіви' з лазурною бірюзовою водою.", color: LAKE_COLOR, center: [49.49, 28.59], radius: 1200 },
+    { id: "samara_plavni_c", type: "lake", name: "Самарські плавні", tags: ["top"], description: "Унікальна екосистема дельти річки Самара з багатим біорізноманіттям.", color: LAKE_COLOR, center: [48.60, 35.30], radius: 4000 },
+    { id: "blue_lakes_sobkivka", type: "lake", name: "Блакитні озера (Собківка)", description: "Мальовничі піщані кар'єри з чистою водою в сосновому лісі.", color: LAKE_COLOR, center: [49.42, 34.45], radius: 1300 },
+    { id: "sriberne_lake", type: "lake", name: "Срібне озеро", description: "Затоплений гранітний кар'єр в Олександрії з цілющими радоновими водами.", color: LAKE_COLOR, center: [48.66, 33.11], radius: 1000 },
+    { id: "yalpuh", type: "lake", name: "Ялпуг", tags: ["top"], area: "149 км²", description: "Найбільше природне прісне озеро України.", color: LAKE_COLOR, center: [45.42, 28.60], radius: 9000 },
 
-    // === DNIEPER SYSTEM (RIGHT BANK) ===
-    { id: "pripyat", type: "river", name: "Прип'ять", length: "761 км", color: RIVER_COLOR, path: [[51.7, 24.3], [51.85, 26.0], [51.8, 28.0], [51.3, 30.2]] },
-    { id: "horyn", type: "river", name: "Горинь", length: "659 км", color: RIVER_COLOR, path: [[50.0, 25.8], [50.5, 26.4], [51.2, 26.6], [51.8, 26.8], [52.0, 26.9]] },
-    { id: "styr", type: "river", name: "Стир", length: "494 км", color: RIVER_COLOR, path: [[49.9, 25.2], [50.5, 25.2], [51.0, 25.5], [51.8, 26.1]] },
-    { id: "sluch", type: "river", name: "Случ", length: "451 км", color: RIVER_COLOR, path: [[49.6, 26.7], [50.2, 27.5], [51.0, 26.8], [51.4, 26.6]] },
-    { id: "uzh_pol", type: "river", name: "Уж (Полісся)", length: "256 км", color: RIVER_COLOR, path: [[50.7, 28.2], [51.1, 29.2], [51.25, 30.2]] },
-    { id: "teteriv", type: "river", name: "Тетерів", length: "365 км", color: RIVER_COLOR, path: [[49.8, 28.3], [50.3, 29.0], [50.8, 30.0], [51.0, 30.3]] },
-    { id: "irpin", type: "river", name: "Ірпінь", length: "162 км", color: RIVER_COLOR, path: [[50.0, 29.4], [50.5, 30.2], [50.8, 30.4]] },
-    { id: "ros", type: "river", name: "Рось", length: "346 км", color: RIVER_COLOR, path: [[49.2, 29.5], [49.6, 30.5], [49.5, 31.5]] },
-    { id: "tiasmyn", type: "river", name: "Тясмин", length: "164 км", color: RIVER_COLOR, path: [[49.0, 31.8], [49.2, 32.6], [49.0, 32.8]] },
-    { id: "inhulets", type: "river", name: "Інгулець", length: "549 км", color: RIVER_COLOR, path: [[48.5, 32.5], [48.2, 33.0], [47.2, 32.8], [46.7, 32.7]] },
-    { id: "saksahan", type: "river", name: "Саксагань", length: "144 км", color: RIVER_COLOR, path: [[48.4, 34.0], [48.0, 33.5], [47.9, 33.3]] },
-    { id: "bazavluk", type: "river", name: "Базавлук", length: "157 км", color: RIVER_COLOR, path: [[48.3, 34.2], [47.7, 33.9], [47.5, 34.0]] },
+    // === SWAMPS & WETLANDS ===
+    { id: "pripyat_swamps", type: "marsh", name: "Прип'ятські болота", area: "98 000 км²", description: "Найбільший болотяний масив Європи.", color: MARSH_COLOR, path: [[51.6, 24.0], [52.0, 25.0], [52.1, 27.0], [51.8, 29.0], [51.4, 30.0], [51.2, 28.0], [51.3, 26.0]] },
+    { id: "bile_swamp", type: "marsh", name: "Болото Біле", description: "Унікальне карстове болоце на Поліссі.", color: MARSH_COLOR, center: [51.48, 26.15], radius: 4500 },
 
-    // === DNIESTER SYSTEM TRIBUTARIES ===
-    { id: "stryi", type: "river", name: "Стрий", length: "232 км", color: RIVER_COLOR, path: [[49.0, 23.2], [49.2, 23.9], [49.3, 24.2]] },
-    { id: "limnytsia", type: "river", name: "Лімниця", length: "122 км", color: RIVER_COLOR, path: [[48.6, 24.0], [48.8, 24.3], [49.0, 24.6]] },
-    { id: "bystrytsia", type: "river", name: "Бистриця", length: "101 км", color: RIVER_COLOR, path: [[48.5, 24.4], [48.7, 24.6], [48.9, 24.8]] },
-    { id: "seret", type: "river", name: "Серет", length: "242 км", color: RIVER_COLOR, path: [[49.8, 25.3], [49.3, 25.6], [48.6, 25.8]] },
-    { id: "strypa", type: "river", name: "Стрипа", length: "147 км", color: RIVER_COLOR, path: [[49.7, 25.2], [49.1, 25.4], [48.8, 25.4]] },
-    { id: "zbruch", type: "river", name: "Збруч", length: "244 км", color: RIVER_COLOR, path: [[49.6, 26.2], [49.0, 26.2], [48.5, 26.4]] },
-
-    // === SOUTHERN BASINS ===
-    { id: "syniukha", type: "river", name: "Синюха", length: "111 км", color: RIVER_COLOR, path: [[48.8, 30.6], [48.4, 30.8], [48.1, 30.9]] },
-    { id: "inhul", type: "river", name: "Інгул", length: "354 км", color: RIVER_COLOR, path: [[48.7, 32.2], [48.0, 32.4], [47.0, 32.0]] },
-
-    // === DANUBE & CARPATHIANS ===
-    { id: "danube", type: "river", name: "Дунай", length: "2850 км", color: "#818cf8", path: [[45.5, 28.2], [45.4, 28.8], [45.2, 29.6]] },
-    { id: "tysa", type: "river", name: "Тиса", length: "966 км", color: "#818cf8", path: [[48.0, 24.2], [48.2, 23.5], [48.1, 23.0]] },
-    { id: "prut", type: "river", name: "Прут", length: "967 км", color: "#818cf8", path: [[48.4, 24.5], [48.2, 26.5], [47.0, 28.0], [46.0, 28.2]] },
-    { id: "latorytsia", type: "river", name: "Латориця", length: "188 км", color: "#818cf8", path: [[48.7, 23.0], [48.5, 22.8], [48.4, 22.4]] },
-    { id: "uzh_zak", type: "river", name: "Уж (Закарпаття)", length: "133 км", color: "#818cf8", path: [[48.9, 22.8], [48.7, 22.5], [48.6, 22.3]] },
-
-    // === AZOV & CRIMEAN RIVERS ===
-    { id: "siversky_donets", type: "river", name: "Сіверський Донець", tags: ["top"], length: "1053 км", color: "#2563eb", path: [[50.6, 36.8], [50.0, 36.9], [49.3, 37.0], [48.7, 39.0], [48.3, 40.0]] },
-    { id: "oskil", type: "river", name: "Оскіл", length: "472 км", color: "#2563eb", path: [[50.5, 37.8], [49.5, 37.5], [49.1, 37.4]] },
-    { id: "aidar", type: "river", name: "Айдар", length: "264 км", color: "#2563eb", path: [[50.0, 38.8], [49.0, 39.2], [48.7, 39.3]] },
-    { id: "kalmius", type: "river", name: "Кальміус", length: "209 км", color: "#f472b6", path: [[48.0, 37.8], [47.4, 37.7], [47.1, 37.6]] },
-    { id: "molochna", type: "river", name: "Молочна", length: "197 км", color: "#fca5a5", path: [[47.2, 35.8], [46.7, 35.3]] },
-    { id: "salhir", type: "river", name: "Салгир", length: "232 км", color: "#fca5a5", path: [[44.9, 34.1], [45.5, 34.8], [45.7, 35.0]] },
-
-    // === LAKES (ALL RESTORED + NEW) ===
-    { id: "svityaz", type: "lake", name: "Світязь", tags: ["top"], area: "26.2 км²", color: LAKE_COLOR, center: [51.50, 23.85], radius: 5000 },
-    { id: "pulemetske", type: "lake", name: "Пулемецьке", area: "16.4 км²", color: LAKE_COLOR, center: [51.56, 23.77], radius: 3000 },
-    { id: "synevyr", type: "lake", name: "Синевир", tags: ["top"], area: "0.04 км²", color: LAKE_COLOR, center: [48.617, 23.684], radius: 2000 },
-    { id: "yalpuh", type: "lake", name: "Ялпуг", tags: ["top"], area: "149 км²", color: LAKE_COLOR, center: [45.42, 28.60], radius: 9000 },
-    { id: "kugurluy", type: "lake", name: "Кугурлуй", area: "82 км²", color: LAKE_COLOR, center: [45.28, 28.65], radius: 6000 },
-    { id: "kahul", type: "lake", name: "Кагул", area: "90 км²", color: LAKE_COLOR, center: [45.37, 28.40], radius: 5000 },
-    { id: "katlabuh", type: "lake", name: "Катлабух", area: "67 км²", color: LAKE_COLOR, center: [45.52, 28.98], radius: 4500 },
-    { id: "kitay", type: "lake", name: "Китай", area: "60 км²", color: LAKE_COLOR, center: [45.65, 29.30], radius: 4000 },
-    { id: "donuzlav", type: "lake", name: "Донузлав", tags: ["top"], area: "48 км²", color: LAKE_COLOR, center: [45.35, 33.00], radius: 7000 },
-    { id: "sasyk_syvash", type: "lake", name: "Сасик-Сиваш", color: SALT_COLOR, center: [45.18, 33.50], radius: 6000 },
-    { id: "lemurian", type: "lake", name: "Лемурійське озеро", tags: ["top"], color: SALT_COLOR, center: [46.24, 33.78], radius: 3000 },
-    { id: "kuyalnik", type: "lake", name: "Куяльник", tags: ["top"], color: SALT_COLOR, center: [46.68, 30.72], radius: 5000 },
-    { id: "syvash", type: "lake", name: "Сиваш", tags: ["top"], color: SALT_COLOR, center: [46.1, 34.3], radius: 15000 },
-    { id: "molochnyi_liman", type: "lake", name: "Молочний лиман", color: LAKE_COLOR, center: [46.52, 35.35], radius: 7000 },
-    { id: "blue_lakes", type: "lake", name: "Голубі озера", color: LAKE_COLOR, center: [51.96, 31.15], radius: 2000 },
-    { id: "shelekhiv", type: "lake", name: "Шелехівське", color: LAKE_COLOR, center: [50.71, 34.50], radius: 1000 },
-
-    // === RESERVOIRS (FULL DNIEPER CASCADE RESTORED) ===
-    { id: "kyiv_res", type: "reservoir", name: "Київське водосховище", tags: ["top"], area: "922 км²", description: "Найвище в каскаді Дніпра.", color: "#2563eb", path: [[50.55, 30.5], [51.0, 30.45], [51.15, 30.6], [50.8, 30.7], [50.55, 30.5]] },
-    { id: "kaniv_res", type: "reservoir", name: "Канівське водосховище", area: "675 км²", color: "#2563eb", path: [[50.4, 30.6], [49.8, 31.2], [49.75, 31.4], [50.3, 30.8]] },
-    { id: "kremenchuk_res", type: "reservoir", name: "Кременчуцьке водосховище", area: "2250 км²", description: "Найбільше за площею в Україні.", color: "#2563eb", path: [[49.5, 32.0], [49.2, 33.0], [48.9, 33.2], [49.6, 32.2]] },
-    { id: "kamianske_res", type: "reservoir", name: "Кам'янське водосховище", area: "567 км²", color: "#2563eb", path: [[48.9, 33.5], [48.55, 34.3], [48.65, 34.5]] },
-    { id: "dnipro_res", type: "reservoir", name: "Дніпровське водосховище", area: "410 км²", description: "Біля ДніпроГЕСу.", color: "#2563eb", path: [[48.5, 35.0], [47.85, 35.1], [48.1, 35.2]] },
-    { id: "kakhovka_res_rem", type: "reservoir", name: "Каховське (історичне)", area: "2155 км²", description: "Об'єкт екологічної катастрофи.", color: "#3b82f6", path: [[47.7, 35.1], [46.85, 33.4], [47.4, 34.8]] },
-    { id: "dniester_res", type: "reservoir", name: "Дністровське водосховище", area: "142 км²", color: "#2563eb", path: [[48.5, 27.2], [48.5, 27.8], [48.4, 27.5]] },
-
-    // === GROUNDWATER (PERMANENT VISIBILITY ACTIVATED) ===
-    { id: "dnipro_basin", type: "groundwater", name: "Дніпровський басейн", color: GROUND_COLOR, path: [[51.8, 31.0], [51.5, 33.5], [50.5, 35.5], [49.0, 36.5], [48.0, 35.0], [48.5, 33.0], [49.5, 31.0], [51.0, 30.5], [51.8, 31.0]] },
-    { id: "volyn_basin", type: "groundwater", name: "Волино-Подільський", color: GROUND_COLOR, path: [[51.8, 23.5], [51.8, 27.0], [50.0, 27.5], [48.5, 24.5], [51.8, 23.5]] },
-
-    // === SWAMPS & WETLANDS (EXPANDED) ===
-    { id: "pripyat_swamps", type: "marsh", name: "Прип'ятські болота", area: "98 000 км²", color: MARSH_COLOR, path: [[51.6, 24.0], [52.0, 25.0], [52.1, 27.0], [51.8, 29.0], [51.4, 30.0], [51.2, 28.0], [51.3, 26.0]] },
-    { id: "bile_swamp", type: "marsh", name: "Болото Біле", color: MARSH_COLOR, center: [51.48, 26.15], radius: 4500 },
-    { id: "zamlay_swamp", type: "marsh", name: "Болото Замлай", color: MARSH_COLOR, center: [51.3, 23.9], radius: 3200 },
-    { id: "dnipro_plavni", type: "marsh", name: "Дніпровські плавні", color: MARSH_COLOR, path: [[46.6, 32.4], [46.5, 32.6], [46.4, 32.3]] },
-
-    // === LAKES: CENTRAL UKRAINE & BEYOND (50+ NEW OBJECTS) ===
-    // --- Central Cluster ---
-    { id: "lake_ritsa_che", type: "lake", name: "Озеро Ріца (Черкаси)", color: LAKE_COLOR, center: [49.46, 32.02], radius: 1200 },
-    { id: "bile_lake_che", type: "lake", name: "Біле озеро (Черкаси)", color: LAKE_COLOR, center: [49.52, 31.95], radius: 1000 },
-    { id: "svyate_pol", type: "lake", name: "Святе озеро (Полтава)", color: LAKE_COLOR, center: [49.85, 34.25], radius: 900 },
-    { id: "blue_lakes_dnipro", type: "lake", name: "Блакитні озера (Дніпро)", color: LAKE_COLOR, center: [48.62, 34.62], radius: 2500 },
-    { id: "samara_plavni", type: "lake", name: "Самарські плавні", tags: ["top"], color: LAKE_COLOR, center: [48.60, 35.30], radius: 4000 },
-    { id: "solonyi_lyman_new", type: "lake", name: "Солоний лиман", color: SALT_COLOR, center: [48.64, 35.52], radius: 3000 },
-    { id: "pischanyme_p", type: "lake", name: "Піщане (Полтава)", color: LAKE_COLOR, center: [49.12, 33.42], radius: 1500 },
-    { id: "hotyla_p", type: "lake", name: "Готила (Черкаси)", color: LAKE_COLOR, center: [49.35, 32.05], radius: 700 },
-
-    // --- Shatsk Group ---
-    { id: "lyutsymir", type: "lake", name: "Люцимир", color: LAKE_COLOR, center: [51.48, 23.93], radius: 2200 },
-    { id: "ostriv'yanske", type: "lake", name: "Острів'янське", color: LAKE_COLOR, center: [51.54, 23.82], radius: 1800 },
-    { id: "krymske_v", type: "lake", name: "Кримське", color: LAKE_COLOR, center: [51.52, 23.70], radius: 1400 },
-    { id: "pisochne_sh", type: "lake", name: "Пісочне (Шацьке)", color: LAKE_COLOR, center: [51.57, 23.91], radius: 2400 },
-    { id: "chorne_vel", type: "lake", name: "Чорне Велике", color: LAKE_COLOR, center: [51.49, 23.92], radius: 1600 },
-    { id: "peremut", type: "lake", name: "Перемут", color: LAKE_COLOR, center: [51.55, 23.95], radius: 1300 },
-
-    // --- Southern & Coastal ---
-    { id: "sasyk_kundyuk", type: "lake", name: "Сасик (Кундудук)", tags: ["top"], color: LAKE_COLOR, center: [45.65, 29.80], radius: 12000 },
-    { id: "hadzhibey_l", type: "lake", name: "Хаджибейський лиман", color: SALT_COLOR, center: [46.6, 30.6], radius: 15000 },
-    { id: "tyligul_l", type: "lake", name: "Тилігульський лиман", color: SALT_COLOR, center: [46.85, 31.15], radius: 20000 },
-    { id: "budaksky_l", type: "lake", name: "Будацький лиман", color: SALT_COLOR, center: [45.95, 30.35], radius: 6000 },
-    { id: "alibey_l", type: "lake", name: "Алібей", color: SALT_COLOR, center: [45.75, 29.98], radius: 8000 },
-
-    // --- Northern & Eastern ---
-    { id: "bile_rivne", type: "lake", name: "Біле озеро (Рівне)", tags: ["top"], color: LAKE_COLOR, center: [51.48, 25.75], radius: 2600 },
-    { id: "nobel_r", type: "lake", name: "Нобель", color: LAKE_COLOR, center: [51.87, 25.77], radius: 3000 },
-    { id: "zasvyate_v", type: "lake", name: "Засвяте", color: LAKE_COLOR, center: [51.62, 25.02], radius: 1100 },
-    { id: "vovchenko_l", type: "lake", name: "Вовченко", color: LAKE_COLOR, center: [51.15, 23.95], radius: 800 },
-    { id: "dobre_v", type: "lake", name: "Добре", color: LAKE_COLOR, center: [51.60, 24.95], radius: 1200 },
-
-    // --- Carpathian Gems ---
-    { id: "nesamovyte_c", type: "lake", name: "Несамовите", tags: ["top"], color: LAKE_COLOR, center: [48.12, 24.53], radius: 500 },
-    { id: "maricheyka_c", type: "lake", name: "Марічейка", color: LAKE_COLOR, center: [48.03, 24.63], radius: 450 },
-    { id: "dogiaska_c", type: "lake", name: "Догяска", color: LAKE_COLOR, center: [48.27, 24.16], radius: 600 },
-
-    // === KARST & CAVES ===
-    { id: "optimistic_cave", type: "cave", name: "Печера Оптимістична", tags: ["top"], length: "267 км", description: "Найдовша гіпсова печера у світі.", color: GROUND_COLOR, center: [48.73, 25.97], radius: 3000 },
-    { id: "mlynky_cave", type: "cave", name: "Печера Млинки", length: "52 км", color: GROUND_COLOR, center: [48.95, 25.87], radius: 2000 },
-    { id: "crystal_cave", type: "cave", name: "Кришталева печера", description: "Відома своїми гіпсовими кристалами.", color: GROUND_COLOR, center: [48.68, 26.08], radius: 1500 },
-    { id: "vertebrate_cave", type: "cave", name: "Печера Вертеба", description: "Печера-музей Трипільської культури.", color: GROUND_COLOR, center: [48.79, 25.88], radius: 1800 },
+    // === KARST & CAVES (PODILLIA) ===
+    { id: "optimistic_cave", type: "cave", name: "Печера Оптимістична", tags: ["top"], length: "267 км", description: "Найдовша гіпсова печера у світі та найдовша печера Євразії.", color: GROUND_COLOR, center: [48.73, 25.97], radius: 3000 },
+    { id: "mlynky_cave", type: "cave", name: "Печера Млинки", length: "52 км", description: "Екстремальна лабіринтова печера на Тернопільщині.", color: GROUND_COLOR, center: [48.95, 25.87], radius: 2000 },
+    { id: "crystal_cave", type: "cave", name: "Кришталева печера", description: "Знаменита своїми гіпсовими кристалами та комфортним мікрокліматом.", color: GROUND_COLOR, center: [48.68, 26.08], radius: 1500 },
+    { id: "vertebrate_cave", type: "cave", name: "Печера Вертеба", description: "Унікальна печера-музей трипільської культури під землею.", color: GROUND_COLOR, center: [48.79, 25.88], radius: 1800 },
 ];
