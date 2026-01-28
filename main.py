@@ -249,6 +249,16 @@ async def get_geo_data(db: Session = Depends(get_db)):
         
     return data
 
+@app.get("/api/debug/reset-db")
+async def reset_db(db: Session = Depends(get_db)):
+    """Secret endpoint to force-repopulate the database."""
+    try:
+        from scripts.import_data import import_data
+        import_data()
+        return {"status": "success", "message": "Database re-populated from data.js"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get('/admin/users', response_class=HTMLResponse)
 async def admin_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
