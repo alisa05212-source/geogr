@@ -22,7 +22,10 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 # Database Imports
 from sqlalchemy.orm import Session
-from database import init_db, get_db, User
+from database import init_db, get_db
+# Models must be imported before init_db if they are not imported in database.py
+import models 
+from models import User, Place
 
 # CONFIGURATION
 # Security: Read ONLY from environment variables. Hardcoding here is a security risk.
