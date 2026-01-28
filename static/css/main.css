@@ -559,16 +559,17 @@ body {
     /* Controls: Bottom Right FAB */
     .controls {
         position: absolute;
-        bottom: calc(55vh + 20px);
-        /* Position ABOVE the sheet */
-        right: 16px;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        /* Fixed width match sidebar padding */
         width: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        z-index: 2000;
-        transition: bottom 0.35s cubic-bezier(0.19, 1, 0.22, 1);
-        pointer-events: auto;
+        z-index: 2005;
+        /* Above content */
+        background: linear-gradient(to top, rgba(15, 23, 42, 1) 20%, rgba(15, 23, 42, 0));
+        padding-top: 20px;
+        pointer-events: none;
+        /* Let clicks pass through gradient area */
     }
 
     /* Move controls down when sidebar is collapsed */
@@ -577,12 +578,24 @@ body {
     }
 
     .controls button {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        font-size: 0;
-        background-color: rgba(30, 41, 59, 0.9);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        pointer-events: auto;
+        /* Re-enable clicks for button */
+        width: 100%;
+        padding: 14px;
+        background: rgba(30, 41, 59, 0.95);
+        /* Solid background for contrast */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .controls button:hover {
+        background: var(--accent-blue);
+        transform: translateY(-2px);
     }
 
     /* Legend: Fixed Top Left */
