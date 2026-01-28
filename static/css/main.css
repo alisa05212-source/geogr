@@ -51,6 +51,8 @@ body {
     border-radius: 20px;
     z-index: 1000;
     padding: 24px;
+    padding-bottom: 100px;
+    /* Ensure content is not hidden behind the bottom button */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
@@ -556,20 +558,35 @@ body {
         color: white;
     }
 
-    /* Controls: Bottom Right FAB */
+    /* Controls: Fixed at bottom of sidebar area */
     .controls {
         position: absolute;
         bottom: 20px;
         left: 20px;
-        right: 20px;
-        /* Fixed width match sidebar padding */
-        width: auto;
-        z-index: 2005;
-        /* Above content */
-        background: linear-gradient(to top, rgba(15, 23, 42, 1) 20%, rgba(15, 23, 42, 0));
-        padding-top: 20px;
+        width: var(--sidebar-width);
+        /* Match sidebar width */
+        z-index: 1005;
+        /* Above sidebar content */
         pointer-events: none;
-        /* Let clicks pass through gradient area */
+        /* Container passes clicks */
+        display: flex;
+        justify-content: center;
+    }
+
+    .controls button {
+        pointer-events: auto;
+        width: calc(100% - 48px);
+        /* Width minus sidebar padding */
+        padding: 12px;
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        transition: all 0.2s;
     }
 
     /* Move controls down when sidebar is collapsed */
