@@ -51,7 +51,7 @@ body {
     border-radius: 20px;
     z-index: 1000;
     padding: 24px;
-    padding-bottom: 100px;
+    padding-bottom: 120px;
     /* Ensure content is not hidden behind the bottom button */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
     display: flex;
@@ -561,22 +561,23 @@ body {
     /* Controls: Fixed at bottom of sidebar area */
     .controls {
         position: absolute;
-        bottom: 20px;
-        left: 20px;
-        width: var(--sidebar-width);
-        /* Match sidebar width */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px 24px;
         z-index: 1005;
         /* Above sidebar content */
         pointer-events: none;
         /* Container passes clicks */
         display: flex;
         justify-content: center;
+        background: linear-gradient(to top, rgba(15, 23, 35, 1) 40%, rgba(15, 23, 35, 0));
+        border-radius: 0 0 20px 20px;
     }
 
     .controls button {
         pointer-events: auto;
-        width: calc(100% - 48px);
-        /* Width minus sidebar padding */
+        width: 100%;
         padding: 12px;
         background: rgba(30, 41, 59, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.2);
