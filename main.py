@@ -55,6 +55,22 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("DATABASE: Connected successfully. All tables verified.")
+        
+        # Check if DB is populated (Migration Check)
+        db = next(get_db())
+        count = db.query(Place).count()
+        if count == 0:
+            logger.warning("DATABASE IS EMPTY! Starting auto-population from data.js...")
+            try:
+                # Import migration script dynamically
+                from scripts.import_data import import_data
+                import_data()
+                logger.info("AUTO-MIGRATION SUCCESSFUL! Data populated.")
+            except Exception as e:
+                logger.error(f"AUTO-MIGRATION FAILED: {e}")
+        else:
+            logger.info(f"DATABASE: Verified {count} objects present.")
+            
     except Exception as e:
         logger.error(f"DATABASE: Connection failed at startup!")
         logger.error(f"Error Detail: {str(e)}")
