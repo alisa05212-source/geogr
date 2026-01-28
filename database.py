@@ -50,11 +50,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# Import models so Alembic/SQLAlchemy can find them
 # We do this inside init_db or just at module level if we want them registered
 def init_db():
-    # Import models here to ensure they are registered with Base.metadata before create_all
-    import models
+    # Models should be imported in main.py BEFORE calling init_db()
+    # to ensure they are registered with Base.metadata
     Base.metadata.create_all(bind=engine)
 
 def get_db():
