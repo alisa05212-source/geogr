@@ -211,108 +211,116 @@ function updateSidebar(item) {
 }
 
 // Render Water Data
-console.group('🔍 HydroAtlas Diagnostics');
-console.log('Total items in GEO_DATA:', GEO_DATA.length);
-console.log('Rivers count:', GEO_DATA.filter(x => x.type === 'river').length);
-console.log('Lakes/Reservoirs count:', GEO_DATA.filter(x => x.type === 'lake' || x.type === 'reservoir').length);
-console.table(GEO_DATA.filter(x => x.type === 'river').map(r => ({ id: r.id, name: r.name, points: r.path ? r.path.length : 0 })));
-console.groupEnd();
-
-GEO_DATA.forEach(item => {
+async function initApp() {
     try {
-        let layer;
-        let pane = 'overlayPane';
+        const response = await fetch('/api/geo-data');
+        if (!response.ok) throw new Error('Network response was not ok');
 
-        if (item.type === 'river') pane = 'riverPane';
-        else if (item.type === 'lake' || item.type === 'reservoir') pane = 'waterPane';
-        else if (item.type === 'marsh') pane = 'marshPane';
-        else if (item.type === 'groundwater') pane = 'groundwaterPane';
-        else if (item.type === 'cave') pane = 'riverPane';
+        // Global variable for search and other functions
+        window.GEO_DATA = await response.json();
 
-        const style = getStyle(item, false);
+        console.group('🔍 HydroAtlas Diagnostics');
+        console.log('Total items loaded from DB:', window.GEO_DATA.length);
+        console.log('Rivers count:', window.GEO_DATA.filter(x => x.type === 'river').length);
+        console.groupEnd();
 
-        if (item.type === 'river') {
-            layer = L.polyline(item.path, { ...style, pane: pane });
-        }
-        else if (item.type === 'lake' || item.type === 'reservoir' || item.type === 'cave' || (item.type === 'marsh' && item.center)) {
-            if (item.path) {
-                layer = L.polygon(item.path, { ...style, pane: pane });
-            } else {
-                layer = L.circle(item.center, {
-                    radius: item.radius || 3000,
-                    ...style,
-                    pane: pane
-                });
-            }
-        }
-        else if (item.type === 'groundwater' || item.type === 'marsh') {
-            if (item.path) {
-                layer = L.polygon(item.path, { ...style, pane: pane });
-            } else if (item.center) {
-                layer = L.circle(item.center, {
-                    radius: item.radius || 3000,
-                    ...style,
-                    pane: pane
-                });
-            }
-        }
+        renderMap(window.GEO_DATA);
 
-        // Mobile Sidebar Logic
-        window.closeSidebar = function () {
-            document.getElementById('river-details').innerHTML = '<div class="placeholder-text"><p>Оберіть об\'єкт...</p></div>';
-            // Reset mobile view padding if needed, or just let users pan
-        };
-
-        if (layer) {
-            layer.addTo(map);
-            layers[item.id] = layer;
-
-            layer.on('mouseover', function () {
-                this.setStyle(getStyle(item, true));
-            });
-
-            layer.on('mouseout', function () {
-                this.setStyle(getStyle(item, false));
-            });
-
-            layer.on('click', function (e) {
-                L.DomEvent.stopPropagation(e); // Prevent map click from closing it immediately
-                updateSidebar(item);
-                toggleMobileSidebar(true);
-
-                // Smart FlyTo with Padding
-                const padding = isMobile() ? [0, 200] : [0, 0]; // [x, y] - shift center up by 200px on mobile
-                // Note: flyTo doesn't support 'padding' option uniformly like fitBounds does for off-centering.
-                // We simulate it by using a latLng offset or fitBounds with paddingBottomRight.
-
-                if (item.type === 'groundwater' || item.type === 'marsh' || item.type === 'reservoir' || item.path) {
-                    // Polygons/Polylines: Use fitBounds which supports padding options
-                    if (layer.getBounds) {
-                        map.flyToBounds(layer.getBounds(), {
-                            paddingBottomRight: isMobile() ? [0, 300] : [0, 0],
-                            maxZoom: 10
-                        });
-                    }
-                } else if (item.center) {
-                    // Points: Center map but shifted
-                    let target = L.latLng(item.center);
-                    // On mobile, we can't easily 'shift' center with flyTo directly without projection math.
-                    // Simpler: Just fly there, user can pan. Or use setView with offset logic (complex).
-                    // Fallback to simple flyTo for points.
-                    map.flyTo(item.center, 10);
-                }
-            });
-
-            layer.bindTooltip(item.name, {
-                permanent: false,
-                direction: 'center',
-                className: 'custom-tooltip'
-            });
-        }
-    } catch (e) {
-        console.warn('Skipping invalid item:', item.id, e);
+    } catch (error) {
+        console.error('Failed to load geographical data:', error);
     }
-});
+}
+
+function renderMap(data) {
+    data.forEach(item => {
+        try {
+            let layer;
+            let pane = 'overlayPane';
+
+            if (item.type === 'river') pane = 'riverPane';
+            else if (item.type === 'lake' || item.type === 'reservoir') pane = 'waterPane';
+            else if (item.type === 'marsh') pane = 'marshPane';
+            else if (item.type === 'groundwater') pane = 'groundwaterPane';
+            else if (item.type === 'cave') pane = 'riverPane';
+
+            const style = getStyle(item, false);
+
+            if (item.type === 'river') {
+                layer = L.polyline(item.path, { ...style, pane: pane });
+            }
+            else if (item.type === 'lake' || item.type === 'reservoir' || item.type === 'cave' || (item.type === 'marsh' && item.center)) {
+                if (item.path) {
+                    layer = L.polygon(item.path, { ...style, pane: pane });
+                } else {
+                    layer = L.circle(item.center, {
+                        radius: item.radius || 3000,
+                        ...style,
+                        pane: pane
+                    });
+                }
+            }
+            else if (item.type === 'groundwater' || item.type === 'marsh') {
+                if (item.path) {
+                    layer = L.polygon(item.path, { ...style, pane: pane });
+                } else if (item.center) {
+                    layer = L.circle(item.center, {
+                        radius: item.radius || 3000,
+                        ...style,
+                        pane: pane
+                    });
+                }
+            }
+
+            // Mobile Sidebar Logic
+            window.closeSidebar = function () {
+                document.getElementById('river-details').innerHTML = '<div class="placeholder-text"><p>Оберіть об\'єкт...</p></div>';
+            };
+
+            if (layer) {
+                layer.addTo(map);
+                layers[item.id] = layer;
+
+                layer.on('mouseover', function () {
+                    this.setStyle(getStyle(item, true));
+                });
+
+                layer.on('mouseout', function () {
+                    this.setStyle(getStyle(item, false));
+                });
+
+                layer.on('click', function (e) {
+                    L.DomEvent.stopPropagation(e);
+                    updateSidebar(item);
+                    toggleMobileSidebar(true);
+
+                    const padding = isMobile() ? [0, 200] : [0, 0];
+
+                    if (item.type === 'groundwater' || item.type === 'marsh' || item.type === 'reservoir' || item.path) {
+                        if (layer.getBounds) {
+                            map.flyToBounds(layer.getBounds(), {
+                                paddingBottomRight: isMobile() ? [0, 300] : [0, 0],
+                                maxZoom: 10
+                            });
+                        }
+                    } else if (item.center) {
+                        map.flyTo(item.center, 10);
+                    }
+                });
+
+                layer.bindTooltip(item.name, {
+                    permanent: false,
+                    direction: 'center',
+                    className: 'custom-tooltip'
+                });
+            }
+        } catch (e) {
+            console.warn('Skipping invalid item:', item.id, e);
+        }
+    });
+}
+
+// Start App
+initApp();
 
 // Cities
 const cityIcon = L.divIcon({

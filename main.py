@@ -185,6 +185,51 @@ async def logout(request: Request):
     request.session.pop('user', None)
     return RedirectResponse(url='/')
 
+# API Endpoints
+from models import Place
+
+@app.get("/api/geo-data")
+async def get_geo_data(db: Session = Depends(get_db)):
+    places = db.query(Place).all()
+    
+    # Serialize manually to match exact JS structure expected by frontend
+    data = []
+    for p in places:
+        # Reconstruct element
+        item = {
+            "id": p.id,
+            "type": p.type,
+            "name": p.name,
+            "description": p.description,
+            "origin": p.origin,
+            "legend": p.legend,
+            "wildlife": p.wildlife,
+            "ecology": p.ecology,
+            "facts": p.facts if p.facts else [],
+            "tags": p.tags if p.tags else [],
+            
+            # Stats (only include if present)
+            "length": p.length,
+            "area": p.area,
+            "depth": p.depth,
+            "basin": p.basin,
+            "source": p.source,
+            "mouth": p.mouth,
+            
+            # Visuals
+            "color": p.color,
+            "radius": p.radius,
+            
+            # Geometry
+            "center": p.center,
+            "path": p.path
+        }
+        # Filter None values to keep payload clean/small? 
+        # JS is fine with nulls, but cleaner to remove empty keys if originally not present
+        data.append({k: v for k, v in item.items() if v is not None})
+        
+    return data
+
 @app.get('/admin/users', response_class=HTMLResponse)
 async def admin_users(db: Session = Depends(get_db)):
     users = db.query(User).all()

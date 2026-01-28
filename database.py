@@ -50,16 +50,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    google_id = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    name = Column(String)
-    picture = Column(String)
-
+# Import models so Alembic/SQLAlchemy can find them
+# We do this inside init_db or just at module level if we want them registered
 def init_db():
+    # Import models here to ensure they are registered with Base.metadata before create_all
+    import models
     Base.metadata.create_all(bind=engine)
 
 def get_db():
