@@ -37,7 +37,12 @@ map.getPane('riverPane').style.zIndex = 500; // Rivers - foreground
 map.createPane('cityPane');
 map.getPane('cityPane').style.zIndex = 600; // Cities - topmost
 
+map.createPane('cityPane');
+map.getPane('cityPane').style.zIndex = 600; // Cities - topmost
+
 let layers = {};
+// Global data container to avoid ReferenceError in event listeners
+let GEO_DATA = [];
 
 function getStyle(item, isHovered) {
     let weight = 3;
@@ -217,7 +222,8 @@ async function initApp() {
         if (!response.ok) throw new Error('Network response was not ok');
 
         // Global variable for search and other functions
-        window.GEO_DATA = await response.json();
+        GEO_DATA = await response.json();
+        window.GEO_DATA = GEO_DATA; // Keep window ref just in case helpers use it
 
         console.group('🔍 HydroAtlas Diagnostics');
         console.log('Total items loaded from DB:', window.GEO_DATA.length);
