@@ -1,4 +1,10 @@
-console.log('🌊 HYDRO ATLAS: Script Loaded');
+console.clear();
+console.log('🌊 HYDRO ATLAS v6.0: System Boot Strapping...');
+
+// Global Registry for Diagnostics (Senior Fix)
+window.map = null;
+window.layers = {};
+window.GEO_DATA = [];
 
 // Initialize map with Smooth Zoom
 const map = L.map('map', {
@@ -9,6 +15,8 @@ const map = L.map('map', {
     wheelPxPerZoom: 120, // Slower, smoother wheel zoom
     // Mobile padding (optional, can be dynamic)
 }).setView([48.5, 31.0], 6);
+
+window.map = map; // Explicitly attach to window
 
 // Mobile check helper
 const isMobile = () => window.innerWidth <= 768;
