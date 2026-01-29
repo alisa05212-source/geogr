@@ -311,24 +311,18 @@ body {
 
 /* River Flow Animation */
 @keyframes dash-flow {
-    0% {
-        stroke-dashoffset: 200;
-    }
-
-    100% {
-        stroke-dashoffset: 0;
+    to {
+        stroke-dashoffset: -100;
     }
 }
 
 .river-flow {
-    stroke-dasharray: 8, 4;
-    /* Smoother dashes */
-    animation: dash-flow 30s linear infinite;
-    /* Slower, majestic flow */
-    filter: drop-shadow(0 0 3px rgba(14, 165, 233, 0.6));
-    /* Enhanced glow */
+    stroke-dasharray: 12, 6;
+    animation: dash-flow 12s linear infinite;
+    /* Faster flow */
+    filter: drop-shadow(0 0 5px #00f2ff);
+    /* Neon glow */
     stroke-linecap: round;
-    opacity: 0.9;
 }
 
 /* Lake Glow Animation */
