@@ -1,11 +1,11 @@
 console.clear();
-console.log('🌊 HYDRO ATLAS v6.2: Restoring Lost Features & Stabilizing...');
+console.log('🌊 HYDRO ATLAS v6.3: Multi-River Support & Stability...');
 
 /**
- * ARCHITECTURE v6.2:
+ * ARCHITECTURE v6.3:
  * 1. Global AppState (Namespaced)
- * 2. Unified Initialization Sequence
- * 3. Restored: Legend, Zoom Controls, Search listeners, Filter stability.
+ * 2. Unified Initialization Sequence (Sequential Boot)
+ * 3. Atomic Layer Management (FeatureGroup)
  */
 
 window.AppState = {
@@ -14,13 +14,25 @@ window.AppState = {
     geoData: [],
     currentFilter: 'all',
     dataGroup: L.featureGroup(),
-    isInitialized: false
+    isInitialized: false,
+
+    // UI CONFIG
+    cities: [
+        { name: "Київ", coords: [50.45, 30.52], description: "Столиця України на Дніпрі." },
+        { name: "Дніпро", coords: [48.46, 35.04], description: "Мегаполіс на обох берегах Дніпра." },
+        { name: "Запоріжжя", coords: [47.83, 35.13], description: "Місто козацької слави." },
+        { name: "Львів", coords: [49.83, 24.02], description: "Серце Галичини." },
+        { name: "Одеса", coords: [46.48, 30.72], description: "Південна Пальміра." },
+        { name: "Харків", coords: [49.99, 36.23], description: "Індустріальний та студентський центр." },
+        { name: "Миколаїв", coords: [46.97, 31.99], description: "Місто корабелів." },
+        { name: "Херсон", coords: [46.63, 32.61], description: "Ключ до Криму." }
+    ]
 };
 
-// --- CONSTANTS & HELPERS ---
-const RIVER_COLOR = '#0ea5e9'; // Classic Blue (Back to stable design)
+// --- STYLING CONSTANTS ---
+const RIVER_COLOR = '#0ea5e9';
 const LAKE_COLOR = '#38bdf8';
-const SALT_COLOR = '#a855f7';
+const SALT_COLOR = '#f472b6';
 const GROUND_COLOR = '#8b5cf6';
 const MARSH_COLOR = '#22c55e';
 const CAVE_COLOR = '#fbbf24';
@@ -28,9 +40,9 @@ const CAVE_COLOR = '#fbbf24';
 const isMobile = () => window.innerWidth <= 768;
 
 function getStyle(item, isHovered) {
-    let weight = item.type === 'river' ? (isHovered ? 8 : 5) : (isHovered ? 4 : 2);
+    let weight = item.type === 'river' ? (isHovered ? 8 : 4.5) : (isHovered ? 4 : 2);
     let color = item.color || RIVER_COLOR;
-    let opacity = 0.9;
+    let opacity = 0.95;
     let fillOpacity = isHovered ? 0.9 : 0.7;
     let className = 'leaflet-interactive';
 
@@ -41,45 +53,31 @@ function getStyle(item, isHovered) {
         className += ' lake-glow';
     }
 
-    if (item.tags?.includes('top') && !isHovered) {
-        weight += 1;
-    }
-
     return {
-        color: color,
-        fillColor: color,
-        weight: weight,
-        opacity: opacity,
-        fillOpacity: fillOpacity,
-        lineCap: 'round',
-        lineJoin: 'round',
-        className: className
+        color, fillColor: color, weight, opacity, fillOpacity,
+        lineCap: 'round', lineJoin: 'round', className: className
     };
 }
 
-// 1. Map Initialization
+// 1. Core Map Boot
 const map = L.map('map', {
     zoomControl: false,
     minZoom: 4,
     zoomSnap: 0.1,
-    zoomDelta: 0.5,
     wheelPxPerZoom: 120,
 }).setView([48.5, 31.0], 6);
 
 window.AppState.map = map;
 window.AppState.dataGroup.addTo(map);
 
-// Add Zoom Control (Restored)
 L.control.zoom({ position: 'topright' }).addTo(map);
 
-// Dark Theme (CartoDB)
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CARTO',
     subdomains: 'abcd',
     maxZoom: 19
 }).addTo(map);
 
-// Create Functional Panes
+// Panes for Z-Index Control
 map.createPane('groundwaterPane').style.zIndex = 250;
 map.createPane('marshPane').style.zIndex = 300;
 map.createPane('waterPane').style.zIndex = 400;
@@ -104,8 +102,7 @@ function addLegend() {
                 <div class="legend-item"><span style="background:${MARSH_COLOR}"></span> Болота</div>
                 <div class="legend-item"><span style="background:${GROUND_COLOR}"></span> Підземні води</div>
                 <div class="legend-item"><span style="background:${CAVE_COLOR}"></span> Печери</div>
-            </div>
-        `;
+            </div>`;
         return div;
     };
     legend.addTo(map);
@@ -116,19 +113,17 @@ window.toggleLegend = function (e) {
     const content = document.getElementById('legend-content');
     const icon = document.getElementById('legend-toggle-icon');
     if (content.style.display === 'none') {
-        content.style.display = 'block';
-        icon.innerText = '▼';
+        content.style.display = 'block'; icon.innerText = '▼';
     } else {
-        content.style.display = 'none';
-        icon.innerText = '▲';
+        content.style.display = 'none'; icon.innerText = '▲';
     }
 };
 
-// 2. Data Seeder
-async function initApp() {
+// 2. Data Loading
+async function initData() {
     try {
         const response = await fetch('/api/geo-data');
-        if (!response.ok) throw new Error('Data fetch failed');
+        if (!response.ok) throw new Error('API unreachable');
         window.AppState.geoData = await response.json();
 
         window.AppState.geoData.forEach(item => {
@@ -142,7 +137,7 @@ async function initApp() {
             const style = getStyle(item, false);
             let layer;
 
-            if (item.type === 'river') {
+            if (item.type === 'river' && item.path) {
                 layer = L.polyline(item.path, { ...style, pane });
             } else if (item.path) {
                 layer = L.polygon(item.path, { ...style, pane });
@@ -160,42 +155,37 @@ async function initApp() {
                     L.DomEvent.stopPropagation(e);
                     updateSidebar(item);
                     toggleMobileSidebar(true);
-                    if (layer.getBounds) {
-                        map.flyToBounds(layer.getBounds(), { padding: [30, 30], maxZoom: 10 });
-                    } else {
-                        map.flyTo(item.center, 10);
-                    }
+                    if (layer.getBounds) map.flyToBounds(layer.getBounds(), { padding: [30, 30], maxZoom: 10 });
+                    else map.flyTo(item.center, 10);
                 });
                 layer.bindTooltip(item.name, { permanent: false, className: 'custom-tooltip' });
             }
         });
-        console.log(`✅ Loaded ${window.AppState.geoData.length} items`);
+        console.log(`📦 Registry Ready: ${window.AppState.geoData.length} objects synced.`);
     } catch (e) {
-        console.error('Boot Error:', e);
+        console.error('Core Boot Failure:', e);
     }
 }
 
-// 3. Interactions UI
-function initInteractions() {
+// 3. UI Initialization
+function initUI() {
     // FILTERS
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
             const cat = btn.getAttribute('data-filter');
             if (window.AppState.currentFilter === cat) return;
             window.AppState.currentFilter = cat;
 
-            filterButtons.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
             window.AppState.dataGroup.clearLayers();
 
             window.AppState.geoData.forEach(item => {
-                let isVisible = false;
-                if (cat === 'all') isVisible = true;
-                else if (cat === 'top' && item.tags?.includes('top')) isVisible = true;
-                else if (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) isVisible = true;
-                else if (item.type === cat) isVisible = true;
+                let isVisible = (cat === 'all') ||
+                    (cat === 'top' && item.tags?.includes('top')) ||
+                    (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) ||
+                    (item.type === cat);
 
                 if (isVisible && window.AppState.layers[item.id]) {
                     window.AppState.dataGroup.addLayer(window.AppState.layers[item.id]);
@@ -224,7 +214,7 @@ function initInteractions() {
         });
     }
 
-    // RESET BUTTON
+    // RESET
     const resetBtn = document.getElementById('reset-view');
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
@@ -236,7 +226,7 @@ function initInteractions() {
     }
 }
 
-// Global UI Helpers
+// --- GLOBAL HELPERS ---
 window.handleSearchSelect = function (id) {
     const item = window.AppState.geoData.find(x => x.id === id);
     const layer = window.AppState.layers[id];
@@ -247,6 +237,8 @@ window.handleSearchSelect = function (id) {
     }
 
     document.getElementById('search-results').style.display = 'none';
+    if (document.getElementById('search-input')) document.getElementById('search-input').value = '';
+
     updateSidebar(item);
     toggleMobileSidebar(true);
 
@@ -257,14 +249,11 @@ window.handleSearchSelect = function (id) {
 function updateSidebar(item) {
     const container = document.getElementById('river-details');
     if (!container) return;
-
     const imageSrc = item.image || `https://images.unsplash.com/photo-1546700086-4e007823f66b?auto=format&fit=crop&w=600&q=80`;
 
     container.innerHTML = `
         <div class="info-card fade-in">
-            <div class="sidebar-image-container">
-                <img src="${imageSrc}" class="sidebar-image" alt="${item.name}">
-            </div>
+            <div class="sidebar-image-container"><img src="${imageSrc}" class="sidebar-image"></div>
             <div class="card-header">
                 <h2>${item.name}</h2>
                 ${item.tags?.includes('top') ? '<span class="badge-top">★ TOP</span>' : ''}
@@ -273,6 +262,7 @@ function updateSidebar(item) {
             <div class="info-grid">
                 ${item.length ? `<div class="info-stat"><span>Довжина:</span> ${item.length}</div>` : ''}
                 ${item.area ? `<div class="info-stat"><span>Площа:</span> ${item.area}</div>` : ''}
+                ${item.basin ? `<div class="info-stat"><span>Басейн:</span> ${item.basin}</div>` : ''}
             </div>
         </div>`;
 }
@@ -285,23 +275,34 @@ function toggleMobileSidebar(expand) {
         else s.classList.add('mobile-collapsed');
     }
 }
-
 window.closeSidebar = () => toggleMobileSidebar(false);
 
-// MAIN BOOTSTRAP
+// --- MAIN BOOT ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Data & Layers
-    await initApp();
+    // 1. Cities (Static Boot)
+    const cityIcon = L.divIcon({
+        className: 'city-icon',
+        html: '<div style="background:#fff; width:8px; height:8px; border-radius:50%; box-shadow:0 0 10px #fff;"></div>',
+        iconSize: [8, 8]
+    });
+    window.AppState.cities.forEach(c => {
+        L.marker(c.coords, { icon: cityIcon, pane: 'cityPane', title: c.name })
+            .addTo(map)
+            .bindTooltip(c.name, { permanent: true, direction: 'right', className: 'city-tooltip' })
+            .on('click', () => {
+                updateSidebar(c);
+                map.flyTo(c.coords, 10);
+                if (isMobile()) toggleMobileSidebar(true);
+            });
+    });
 
-    // 2. Legend
+    // 2. Data & Legend
+    await initData();
     addLegend();
 
-    // 3. Interactions
-    initInteractions();
-
-    // 4. Mobile initial state
-    if (isMobile()) toggleMobileSidebar(false);
+    // 3. UI
+    initUI();
 
     window.AppState.isInitialized = true;
-    console.log('🏁 System Ready v6.2');
+    console.log('✅ HydroAtlas v6.3: Data Synchronized & Features Restored');
 });

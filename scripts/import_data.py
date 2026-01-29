@@ -48,68 +48,63 @@ def import_data():
     # 1. Unquote keys? No, Python requires quoted keys in dicts. 
     # But the JS file has `id: "val"`. We need to quote keys: id: -> "id":
     # Regex to quote keys that are essentially identifiers
-    py_str = re.sub(r'(\s)(id|type|name|tags|area|depth|description|origin|legend|wildlife|ecology|facts|color|center|radius|path|source|mouth|len|basin|length):', r'\1"\2":', js_array_str)
+    # Transformation to make it Python-valid
+    # 1. Quote ALL keys that look like JS object keys: key: -> "key":
+    py_str = re.sub(r'(\s)([a-zA-Z_0-9]+):', r'\1"\2":', js_array_str)
     
     # 2. Comments removal
     py_str = re.sub(r'//.*', '', py_str)
     
     try:
-        # Dangerous but effective for one-off migration of trusted file
+        # Use literal_eval if possible for safety, but eval is needed here for nested lists/colors
         data = eval(py_str)
         
-        logger.info(f"Parsed {len(data)} objects.")
+        logger.info(f"Parsed {len(data)} objects from data.js.")
         
         for item in data:
             try:
-                # Prepare JSON fields
-                facts = item.get('facts', [])
-                tags = item.get('tags', [])
-                center = item.get('center', None)
-                path = item.get('path', None)
+                # Prepare fields
+                fields = {
+                    "type": item.get('type', 'river'),
+                    "name": item.get('name'),
+                    "description": item.get('description'),
+                    "origin": item.get('origin'),
+                    "legend": item.get('legend'),
+                    "wildlife": item.get('wildlife'),
+                    "ecology": item.get('ecology'),
+                    "length": item.get('length'),
+                    "area": item.get('area'),
+                    "depth": item.get('depth'),
+                    "basin": item.get('basin'),
+                    "source": item.get('source'),
+                    "mouth": item.get('mouth'),
+                    "color": item.get('color'),
+                    "radius": item.get('radius'),
+                    "image": item.get('image'),
+                    "facts": item.get('facts', []),
+                    "tags": item.get('tags', []),
+                    "center": item.get('center'),
+                    "path": item.get('path')
+                }
                 
-                # Check exist
+                # REPLACEMENT STRATEGY: Update or Create
                 existing = session.query(Place).filter(Place.id == item['id']).first()
                 
-                if not existing:
-                    place = Place(
-                        id=item['id'],
-                        type=item.get('type', 'river'),
-                        name=item.get('name'),
-                        description=item.get('description'),
-                        origin=item.get('origin'),
-                        legend=item.get('legend'),
-                        wildlife=item.get('wildlife'),
-                        ecology=item.get('ecology'),
-                        
-                        # Stats
-                        length=item.get('length'),
-                        area=item.get('area'),
-                        depth=item.get('depth'),
-                        basin=item.get('basin'),
-                        source=item.get('source'),
-                        mouth=item.get('mouth'),
-                        
-                        # Visuals
-                        color=item.get('color'),
-                        radius=item.get('radius'),
-                        image=item.get('image'),
-                        
-                        # JSON fields
-                        facts=facts,
-                        tags=tags,
-                        center=center,
-                        path=path
-                    )
-                    session.add(place)
-                    logger.info(f"Added: {item.get('name')}")
+                if existing:
+                    # Update all fields
+                    for key, value in fields.items():
+                        setattr(existing, key, value)
+                    logger.info(f"Updated: {item.get('name')}")
                 else:
-                    # Optional: Update existing
-                    pass
+                    place = Place(id=item['id'], **fields)
+                    session.add(place)
+                    logger.info(f"Created: {item.get('name')}")
+                    
             except Exception as e:
                 logger.error(f"Error processing item {item.get('id', '?')}: {e}")
                 
         session.commit()
-        logger.info("Migration completed successfully!")
+        logger.info("DATABASE SYNC COMPLETE!")
         
     except Exception as e:
         logger.error(f"Eval error: {e}")
