@@ -1,16 +1,18 @@
 console.clear();
-console.log('🌊 HYDRO ATLAS v6.0: System Boot Strapping...');
+console.log('🌊 HYDRO ATLAS v6.1: Implementing Managed State...');
 
 /**
- * SENIOR ARCHITECTURE:
- * 1. Global Registry for state management & external diagnostics.
- * 2. Sequential Initialization (Await Data -> Render -> Attach Listeners).
- * 3. Registry-based Filtering (ChatGPT Scheme: Clear all, then add specific).
+ * SENIOR ARCHITECTURE v6.1 (Managed State & Atomic Layers)
  */
 
-window.map = null;
-window.layers = {};
-window.GEO_DATA = [];
+window.AppState = {
+    map: null,
+    layers: {},
+    geoData: [],
+    currentFilter: 'all',
+    dataGroup: L.featureGroup(), // Atomic group for all data layers
+    isInitialized: false
+};
 
 // Constants
 const RIVER_BLUE = '#00f2ff';
@@ -25,7 +27,8 @@ const map = L.map('map', {
     wheelPxPerZoom: 120,
 }).setView([48.5, 31.0], 6);
 
-window.map = map;
+window.AppState.map = map;
+window.AppState.dataGroup.addTo(map);
 
 // Theme & Panes
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -152,9 +155,9 @@ async function initApp() {
     try {
         const response = await fetch('/api/geo-data');
         if (!response.ok) throw new Error('Network failure');
-        window.GEO_DATA = await response.json();
-        console.log(`📦 Data Loaded: ${window.GEO_DATA.length} objects.`);
-        renderMap(window.GEO_DATA);
+        window.AppState.geoData = await response.json();
+        console.log(`📦 Data Loaded: ${window.AppState.geoData.length} objects.`);
+        renderMap(window.AppState.geoData);
     } catch (e) {
         console.error('Core Load Error:', e);
     }
@@ -182,8 +185,9 @@ function renderMap(data) {
             }
 
             if (layer) {
-                layer.addTo(window.map);
-                window.layers[item.id] = layer;
+                // ADD TO DATA GROUP INSTEAD OF DIRECT MAP
+                window.AppState.dataGroup.addLayer(layer);
+                window.AppState.layers[item.id] = layer;
 
                 layer.on('mouseover', function () { this.setStyle(getStyle(item, true)); });
                 layer.on('mouseout', function () { this.setStyle(getStyle(item, false)); });
@@ -192,9 +196,9 @@ function renderMap(data) {
                     updateSidebar(item);
                     toggleMobileSidebar(true);
                     if (layer.getBounds) {
-                        window.map.flyToBounds(layer.getBounds(), { padding: [20, 20], maxZoom: 10 });
+                        window.AppState.map.flyToBounds(layer.getBounds(), { padding: [20, 20], maxZoom: 10 });
                     } else {
-                        window.map.flyTo(item.center, 10);
+                        window.AppState.map.flyTo(item.center, 10);
                     }
                 });
 
@@ -208,37 +212,35 @@ function renderMap(data) {
 
 // 3. Interactions logic
 function initInteractions() {
-    const hideAllLayers = () => {
-        console.log('🧹 Deep Cleansing Map layers...');
-        // 1. Registry
-        Object.values(window.layers).forEach(l => { if (window.map.hasLayer(l)) window.map.removeLayer(l); });
-        // 2. Extra safety
-        window.map.eachLayer(l => {
-            if (l instanceof L.Polyline || l instanceof L.Polygon || l instanceof L.Circle) {
-                window.map.removeLayer(l);
-            }
-        });
-    };
-
-    // Filters
+    // FILTERS
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const cat = btn.getAttribute('data-filter');
+
+            // GUARD: Prevent redundant processing
+            if (window.AppState.currentFilter === cat) return;
+            window.AppState.currentFilter = cat;
+
+            console.log(`🧹 Atomic Registry Cleansing for category: ${cat}`);
+
+            // UI Toggle
             filterButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            hideAllLayers();
+            // 1. ATOMIC CLEAR (Using managed FeatureGroup)
+            window.AppState.dataGroup.clearLayers();
 
-            window.GEO_DATA.forEach(item => {
+            // 2. RE-ADD CATEGORY
+            window.AppState.geoData.forEach(item => {
                 let isVisible = false;
                 if (cat === 'all') isVisible = true;
                 else if (cat === 'top' && item.tags?.includes('top')) isVisible = true;
                 else if (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) isVisible = true;
                 else if (item.type === cat) isVisible = true;
 
-                if (isVisible && window.layers[item.id]) {
-                    window.map.addLayer(window.layers[item.id]);
+                if (isVisible && window.AppState.layers[item.id]) {
+                    window.AppState.dataGroup.addLayer(window.AppState.layers[item.id]);
                 }
             });
         });
@@ -248,8 +250,9 @@ function initInteractions() {
     const resetBtn = document.getElementById('reset-view');
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
-            window.map.setView([48.5, 31.0], 6);
+            window.AppState.map.setView([48.5, 31.0], 6);
             window.closeSidebar();
+            // This will trigger the GUARD check and filter reset
             const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
             if (allBtn) allBtn.click();
         });
@@ -262,7 +265,7 @@ function initInteractions() {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
             if (query.length < 2) { searchResults.style.display = 'none'; return; }
-            const filtered = window.GEO_DATA.filter(it => it.name.toLowerCase().includes(query)).slice(0, 10);
+            const filtered = window.AppState.geoData.filter(it => it.name.toLowerCase().includes(query)).slice(0, 10);
             if (filtered.length > 0) {
                 searchResults.innerHTML = filtered.map(it => `
                     <div class="search-result-item" onclick="handleSearchSelect('${it.id}')">
@@ -274,19 +277,25 @@ function initInteractions() {
         });
     }
 
-    console.log('✅ System Online (v6.0)');
+    console.log('✅ HydroAtlas v6.1: Advanced State Online');
 }
 
 // Global functions
 window.handleSearchSelect = function (id) {
-    const item = window.GEO_DATA.find(x => x.id === id);
-    const layer = window.layers[id];
+    const item = window.AppState.geoData.find(x => x.id === id);
+    const layer = window.AppState.layers[id];
     if (!item || !layer) return;
+
+    // Ensure the layer is actually on the map if filtered out
+    if (!window.AppState.dataGroup.hasLayer(layer)) {
+        window.AppState.dataGroup.addLayer(layer);
+    }
+
     document.getElementById('search-results').style.display = 'none';
     updateSidebar(item);
     toggleMobileSidebar(true);
-    if (layer.getBounds) window.map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 14 });
-    else window.map.flyTo(item.center, 14);
+    if (layer.getBounds) window.AppState.map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 14 });
+    else window.AppState.map.flyTo(item.center, 14);
 };
 
 function toggleMobileSidebar(expand) {
@@ -302,26 +311,27 @@ window.closeSidebar = () => toggleMobileSidebar(false);
 
 // BOOTSTRAP
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Data
+    if (window.AppState.isInitialized) return;
+
     await initApp();
 
-    // 2. Cities
     const cityIcon = L.divIcon({
         className: 'city-icon',
         html: '<div style="background:#fff; width:8px; height:8px; border-radius:50%; box-shadow:0 0 10px #fff;"></div>',
         iconSize: [8, 8]
     });
+
     CITIES.forEach(c => {
         L.marker(c.coords, { icon: cityIcon, pane: 'cityPane', title: c.name })
-            .addTo(window.map)
+            .addTo(window.AppState.map)
             .bindTooltip(c.name, { permanent: true, direction: 'right', className: 'city-tooltip' })
             .on('click', () => {
                 updateSidebar(c);
-                window.map.flyTo(c.coords, 10);
+                window.AppState.map.flyTo(c.coords, 10);
                 if (isMobile()) toggleMobileSidebar(true);
             });
     });
 
-    // 3. Logic
     initInteractions();
+    window.AppState.isInitialized = true;
 });
