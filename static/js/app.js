@@ -565,3 +565,17 @@ legend.onAdd = function (map) {
     return div;
 };
 legend.addTo(map);
+
+// Safe Reset View Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const resetBtn = document.getElementById('reset-view');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (map) map.setView([48.5, 31.0], 6);
+            if (window.closeSidebar) window.closeSidebar();
+        });
+        console.log('Reset button attached');
+    } else {
+        console.warn('Reset View button not found in DOM');
+    }
+});
