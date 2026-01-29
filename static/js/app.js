@@ -340,34 +340,10 @@ function renderMap(data) {
     });
 }
 
-// Start App
-initApp();
+// Start App is now handled in DOMContentLoaded to prevent race conditions.
+// initApp(); <- REMOVED to fix duplicated logic
 
-// Cities
-const cityIcon = L.divIcon({
-    className: 'city-icon',
-    html: '<div style="background:#fff; width:8px; height:8px; border-radius:50%; box-shadow:0 0 10px #fff;"></div>',
-    iconSize: [8, 8]
-});
-
-CITIES.forEach(city => {
-    L.marker(city.coords, {
-        icon: cityIcon,
-        pane: 'cityPane',
-        title: city.name
-    })
-        .addTo(map)
-        .bindTooltip(city.name, {
-            permanent: true,
-            direction: 'right',
-            offset: [10, 0],
-            className: 'city-tooltip'
-        })
-        .on('click', () => {
-            updateSidebar(city);
-            map.flyTo(city.coords, 10);
-        });
-});
+// Cities logic moved to DOMContentLoaded initialization block.
 
 // --- INTERACTIONS INITIALIZATION ---
 function initInteractions() {
