@@ -425,7 +425,7 @@ function initInteractions() {
     if (filterButtons.length > 0) {
         filterButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const cat = e.target.getAttribute('data-filter');
+                const cat = btn.getAttribute('data-filter'); // Best practice: use the button ref
                 filterButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
