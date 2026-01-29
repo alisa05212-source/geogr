@@ -535,84 +535,55 @@ body {
         box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
     }
 
-    /* Header */
     .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
         margin-bottom: 5px;
     }
 
-    .sidebar-header h1 {
-        font-size: 1.5rem;
-        margin-top: 5px;
-        pointer-events: none;
-    }
-
-    /* Content/Info Readability */
-    .river-details {
-        padding-bottom: 120px;
-        /* Safety padding */
-    }
-
-    .river-desc {
-        font-size: 1rem;
-        line-height: 1.6;
-        color: #f1f5f9;
-        margin-bottom: 20px;
-    }
-
-    .info-stat span {
+    .badge-v {
+        font-size: 0.75rem;
+        background: var(--accent-blue);
         color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        vertical-align: middle;
+        opacity: 0.8;
     }
 
-    /* Controls: Fixed at bottom of sidebar area */
-    .controls {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        padding: 25px 24px;
-        z-index: 2005;
-        /* Above sidebar content */
-        pointer-events: none;
-        /* Passes to button */
-        display: flex;
-        justify-content: center;
-        background: linear-gradient(to top, #111827 60%, rgba(17, 24, 39, 0));
-        border-radius: 0 0 20px 20px;
-    }
-
-    .controls button {
-        pointer-events: auto !important;
-        width: 100%;
-        padding: 14px;
-        background: #1e293b;
+    #reset-view {
+        background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        color: #fff;
+        color: white;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        font-weight: 700;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-        transition: all 0.2s;
+        font-size: 1.3rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-shrink: 0;
+        margin-left: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        pointer-events: auto !important;
     }
 
-    .controls button:hover {
-        background: #334155;
-        border-color: var(--accent-blue);
+    #reset-view:hover {
+        background: var(--accent-blue);
+        transform: rotate(15deg) scale(1.1);
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
     }
 
-    /* Move controls down when sidebar is collapsed */
-    .sidebar.mobile-collapsed .controls {
-        position: fixed;
-        /* Keep at very bottom of screen */
-        bottom: -100px;
-        /* Hide completely when collapsed */
-        opacity: 0;
-        pointer-events: none;
+    /* Ensure Search is properly spaced */
+    .search-container {
+        margin-top: 15px;
     }
 
-    /* Fixed Button on Mobile */
     .controls {
-        z-index: 4000;
-        padding-bottom: env(safe-area-inset-bottom, 20px);
+        display: none !important;
     }
 }
 
