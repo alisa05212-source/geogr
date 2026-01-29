@@ -1,3 +1,5 @@
+console.log('🌊 HYDRO ATLAS: Script Loaded');
+
 // Initialize map with Smooth Zoom
 const map = L.map('map', {
     zoomControl: false,
@@ -33,9 +35,6 @@ map.getPane('waterPane').style.zIndex = 400; // Lakes / Reservoirs
 
 map.createPane('riverPane');
 map.getPane('riverPane').style.zIndex = 500; // Rivers - foreground
-
-map.createPane('cityPane');
-map.getPane('cityPane').style.zIndex = 600; // Cities - topmost
 
 map.createPane('cityPane');
 map.getPane('cityPane').style.zIndex = 600; // Cities - topmost
