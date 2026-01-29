@@ -425,19 +425,31 @@ function initInteractions() {
         });
     }
 
+    // --- FILTER HELPERS ---
+    const hideAllLayers = () => {
+        Object.values(layers).forEach(layer => {
+            if (map.hasLayer(layer)) map.removeLayer(layer);
+        });
+    };
+
     // 3. Filters Logic
     const filterButtons = document.querySelectorAll('.filter-btn');
     if (filterButtons.length > 0) {
         filterButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const cat = btn.getAttribute('data-filter');
+
+                // UI Toggle
                 filterButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+
+                // 1. CLEAR EVERYTHING FIRST (ChatGPT Rule #1)
+                hideAllLayers();
 
                 const dataList = window.GEO_DATA || GEO_DATA;
                 if (!dataList) return;
 
-                // Loop through all registered ID layers
+                // 2. SHOW ONLY SELECTED (Replacement Strategy)
                 Object.keys(layers).forEach(id => {
                     const item = dataList.find(x => x.id === id);
                     if (!item) return;
@@ -448,11 +460,9 @@ function initInteractions() {
                     else if (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) isVisible = true;
                     else if (item.type === cat) isVisible = true;
 
-                    const layer = layers[id];
                     if (isVisible) {
-                        if (!map.hasLayer(layer)) map.addLayer(layer);
-                    } else {
-                        if (map.hasLayer(layer)) map.removeLayer(layer);
+                        const layer = layers[id];
+                        map.addLayer(layer);
                     }
                 });
             });
