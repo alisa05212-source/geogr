@@ -49,15 +49,18 @@ body {
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border);
     border-radius: 20px;
-    z-index: 1000;
+    z-index: 2000;
+    /* Higher than map and everything else */
     padding: 24px;
-    padding-bottom: 120px;
+    padding-bottom: 100px;
     /* Ensure content is not hidden behind the bottom button */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
+    pointer-events: auto;
+    /* Ensure it catches clicks */
 }
 
 .sidebar-header h1 {
@@ -174,6 +177,8 @@ body {
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s;
+    pointer-events: auto !important;
+    /* GPT-suggested fix */
 }
 
 .filter-btn:hover {
@@ -564,111 +569,116 @@ body {
         bottom: 0;
         left: 0;
         width: 100%;
-        padding: 20px 24px;
-        z-index: 1005;
+        padding: 25px 24px;
+        z-index: 2005;
         /* Above sidebar content */
         pointer-events: none;
-        /* Container passes clicks */
+        /* Passes to button */
         display: flex;
         justify-content: center;
-        background: linear-gradient(to top, rgba(15, 23, 35, 1) 40%, rgba(15, 23, 35, 0));
+        background: linear-gradient(to top, #111827 60%, rgba(17, 24, 39, 0));
         border-radius: 0 0 20px 20px;
     }
 
     .controls button {
-        pointer-events: auto;
+        pointer-events: auto !important;
         width: 100%;
-        padding: 12px;
-        background: rgba(30, 41, 59, 0.95);
+        padding: 14px;
+        background: #1e293b;
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 12px;
         color: #fff;
         cursor: pointer;
-        font-weight: 600;
+        font-weight: 700;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
         transition: all 0.2s;
     }
 
-    /* Move controls down when sidebar is collapsed */
-    .sidebar.mobile-collapsed~.controls {
-        bottom: 100px;
-    }
-
-    .controls button {
-        pointer-events: auto;
-        /* Re-enable clicks for button */
-        width: 100%;
-        padding: 14px;
-        background: rgba(30, 41, 59, 0.95);
-        /* Solid background for contrast */
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        color: #fff;
-        cursor: pointer;
-        font-weight: 600;
-        transition: 0.2s;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
     .controls button:hover {
-        background: var(--accent-blue);
-        transform: translateY(-2px);
+        background: #334155;
+        border-color: var(--accent-blue);
     }
+}
 
-    /* Legend: Fixed Top Left */
-    .legend {
-        position: fixed !important;
-        top: 20px !important;
-        left: 20px !important;
-        margin: 0 !important;
-        z-index: 4000 !important;
+/* Move controls down when sidebar is collapsed */
+.sidebar.mobile-collapsed~.controls {
+    bottom: 100px;
+}
 
-        background: rgba(15, 23, 42, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        border-radius: 12px;
+.controls button {
+    pointer-events: auto;
+    /* Re-enable clicks for button */
+    width: 100%;
+    padding: 14px;
+    background: rgba(30, 41, 59, 0.95);
+    /* Solid background for contrast */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
 
-        /* Auto sizing limits */
-        width: auto;
-        max-width: 220px;
-        max-height: 40vh;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
+.controls button:hover {
+    background: var(--accent-blue);
+    transform: translateY(-2px);
+}
 
-    .legend.minimized {
-        width: 48px;
-        height: 48px;
-        padding: 0 !important;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-    }
+/* Legend: Fixed Top Left */
+.legend {
+    position: fixed !important;
+    top: 20px !important;
+    left: 20px !important;
+    margin: 0 !important;
+    z-index: 4000 !important;
 
-    .legend.minimized::after {
-        content: 'ℹ️';
-        font-size: 1.5rem;
-    }
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
 
-    .legend.minimized * {
-        display: none !important;
-    }
+    /* Auto sizing limits */
+    width: auto;
+    max-width: 220px;
+    max-height: 40vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
-    /* Zoom Controls */
-    .leaflet-control-zoom {
-        margin-top: 0 !important;
-        display: none !important;
-        /* Hide zoom buttons on mobile to save space if needed, or adjust */
-    }
+.legend.minimized {
+    width: 48px;
+    height: 48px;
+    padding: 0 !important;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
 
-    /* Adjust if we keep zoom controls */
-    .leaflet-top.leaflet-right {
-        top: 90px;
-        right: 10px;
-        display: none;
-        /* Often gestures are enough, removes clutter */
-    }
+.legend.minimized::after {
+    content: 'ℹ️';
+    font-size: 1.5rem;
+}
+
+.legend.minimized * {
+    display: none !important;
+}
+
+/* Zoom Controls */
+.leaflet-control-zoom {
+    margin-top: 0 !important;
+    display: none !important;
+    /* Hide zoom buttons on mobile to save space if needed, or adjust */
+}
+
+/* Adjust if we keep zoom controls */
+.leaflet-top.leaflet-right {
+    top: 90px;
+    right: 10px;
+    display: none;
+    /* Often gestures are enough, removes clutter */
+}
 }
