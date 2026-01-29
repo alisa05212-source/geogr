@@ -54,45 +54,50 @@ let layers = {};
 // Global data container to avoid ReferenceError in event listeners
 let GEO_DATA = [];
 
+const RIVER_BLUE = '#00f2ff'; // Vivid Electric Cyan
+const LAKE_BLUE = '#0ea5e9';
+
 function getStyle(item, isHovered) {
-    let weight = 3;
-    let opacity = 0.8;
-    let fillOpacity = 0.4;
-    let color = item.color;
+    let weight = 4;
+    let opacity = 0.9;
+    let fillOpacity = 0.5;
+    let color = item.color || RIVER_BLUE;
     let stroke = true;
     let className = 'leaflet-interactive';
 
     if (item.type === 'river') {
-        weight = isHovered ? 6 : 4;
+        weight = isHovered ? 8 : 5;
+        color = RIVER_BLUE; // Force high visibility blue
         opacity = 1;
         className += ' river-flow';
     }
     else if (item.type === 'lake' || item.type === 'reservoir') {
-        weight = isHovered ? 4 : 2;
-        fillOpacity = isHovered ? 0.9 : 0.7;
+        weight = isHovered ? 5 : 2;
+        color = LAKE_BLUE;
+        fillOpacity = isHovered ? 1 : 0.8;
         opacity = 1;
         className += ' lake-glow';
-        if (item.type === 'reservoir') fillOpacity = 0.8;
     }
     else if (item.type === 'groundwater') {
         weight = 1;
-        // Reduced opacity to not obscure rivers
-        fillOpacity = isHovered ? 0.45 : 0.30;
+        fillOpacity = isHovered ? 0.6 : 0.4;
         stroke = false;
+        color = '#a855f7';
     }
     else if (item.type === 'marsh') {
-        weight = 1.5;
-        // Softened swamps to let rivers show through
-        fillOpacity = isHovered ? 0.7 : 0.55;
-        opacity = 0.8;
+        weight = 2;
+        fillOpacity = isHovered ? 0.8 : 0.6;
+        opacity = 1;
+        color = '#4d7c0f';
     }
     else if (item.type === 'cave') {
-        weight = isHovered ? 12 : 6;
-        fillOpacity = 0.9;
+        weight = isHovered ? 14 : 8;
+        fillOpacity = 1;
+        color = '#fbbf24';
     }
 
     if (item.tags && item.tags.includes('top')) {
-        if (!isHovered) weight += 1;
+        if (!isHovered) weight += 1.5;
     }
 
     return {
@@ -425,16 +430,17 @@ function initInteractions() {
     if (filterButtons.length > 0) {
         filterButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const cat = btn.getAttribute('data-filter'); // Best practice: use the button ref
+                const cat = btn.getAttribute('data-filter');
                 filterButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
                 const dataList = window.GEO_DATA || GEO_DATA;
                 if (!dataList) return;
 
-                dataList.forEach(item => {
-                    const layer = layers[item.id];
-                    if (!layer) return;
+                // Loop through all registered ID layers
+                Object.keys(layers).forEach(id => {
+                    const item = dataList.find(x => x.id === id);
+                    if (!item) return;
 
                     let isVisible = false;
                     if (cat === 'all') isVisible = true;
@@ -442,6 +448,7 @@ function initInteractions() {
                     else if (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) isVisible = true;
                     else if (item.type === cat) isVisible = true;
 
+                    const layer = layers[id];
                     if (isVisible) {
                         if (!map.hasLayer(layer)) map.addLayer(layer);
                     } else {
