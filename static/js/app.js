@@ -413,6 +413,10 @@ function initInteractions() {
         resetBtn.addEventListener('click', () => {
             if (map) map.setView([48.5, 31.0], 6);
             if (window.closeSidebar) window.closeSidebar();
+
+            // 🔥 Reset filters too
+            const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+            if (allBtn) allBtn.click();
         });
     }
 
@@ -421,21 +425,22 @@ function initInteractions() {
     if (filterButtons.length > 0) {
         filterButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const cat = e.target.dataset.filter;
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
+                const cat = e.target.getAttribute('data-filter');
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
 
-                if (!GEO_DATA) return;
+                const dataList = window.GEO_DATA || GEO_DATA;
+                if (!dataList) return;
 
-                GEO_DATA.forEach(item => {
+                dataList.forEach(item => {
                     const layer = layers[item.id];
                     if (!layer) return;
 
                     let isVisible = false;
                     if (cat === 'all') isVisible = true;
                     else if (cat === 'top' && item.tags && item.tags.includes('top')) isVisible = true;
-                    else if (item.type === cat) isVisible = true;
                     else if (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) isVisible = true;
+                    else if (item.type === cat) isVisible = true;
 
                     if (isVisible) {
                         if (!map.hasLayer(layer)) map.addLayer(layer);
