@@ -406,42 +406,51 @@ map.on('click', function (e) {
 });
 
 // --- SEARCH LOGIC ---
-const searchInput = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 App initialized');
 
-if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase().trim();
-        if (query.length < 2) {
-            searchResults.style.display = 'none';
-            return;
-        }
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
 
-        const filtered = GEO_DATA.filter(item =>
-            item.name.toLowerCase().includes(query) ||
-            (item.description && item.description.toLowerCase().includes(query))
-        ).slice(0, 10); // Limit results
+    if (searchInput && searchResults) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
 
-        if (filtered.length > 0) {
-            searchResults.innerHTML = filtered.map(item => `
-                <div class="search-result-item" onclick="handleSearchSelect('${item.id}')">
-                    <span class="item-name">${item.name}</span>
-                    <span class="item-type">${item.type === 'river' ? 'річка' : item.type === 'lake' ? 'озеро' : 'об\'єкт'}</span>
-                </div>
-            `).join('');
-            searchResults.style.display = 'block';
-        } else {
-            searchResults.style.display = 'none';
-        }
-    });
+            // Safe check for GEO_DATA
+            if (!window.GEO_DATA) return;
 
-    // Close results when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')) {
-            searchResults.style.display = 'none';
-        }
-    });
-}
+            const filtered = window.GEO_DATA.filter(item =>
+                item.name.toLowerCase().includes(query) ||
+                (item.description && item.description.toLowerCase().includes(query))
+            ).slice(0, 10);
+
+            if (filtered.length > 0) {
+                searchResults.innerHTML = filtered.map(item => `
+                    <div class="search-result-item" onclick="handleSearchSelect('${item.id}')">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-type">${item.type === 'river' ? 'річка' : item.type === 'lake' ? 'озеро' : 'об\'єкт'}</span>
+                    </div>
+                `).join('');
+                searchResults.style.display = 'block';
+            } else {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // Close results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                searchResults.style.display = 'none';
+            }
+        });
+    } else {
+        console.warn('Search elements not found in DOM');
+    }
+});
 
 window.handleSearchSelect = function (id) {
     const item = GEO_DATA.find(x => x.id === id);
