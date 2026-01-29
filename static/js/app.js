@@ -40,6 +40,17 @@ map.getPane('cityPane').style.zIndex = 600; // Cities - topmost
 map.createPane('cityPane');
 map.getPane('cityPane').style.zIndex = 600; // Cities - topmost
 
+const CITIES = [
+    { name: "Київ", coords: [50.45, 30.52], type: "city", description: "Столиця України на Дніпрі." },
+    { name: "Дніпро", coords: [48.46, 35.04], type: "city", description: "Мегаполіс на обох берегах Дніпра." },
+    { name: "Запоріжжя", coords: [47.83, 35.13], type: "city", description: "Місто козацької слави." },
+    { name: "Львів", coords: [49.83, 24.02], type: "city", description: "Серце Галичини." },
+    { name: "Одеса", coords: [46.48, 30.72], type: "city", description: "Південна Пальміра." },
+    { name: "Харків", coords: [49.99, 36.23], type: "city", description: "Індустріальний та студентський центр." },
+    { name: "Миколаїв", coords: [46.97, 31.99], type: "city", description: "Місто корабелів." },
+    { name: "Херсон", coords: [46.63, 32.61], type: "city", description: "Ключ до Криму." }
+];
+
 let layers = {};
 // Global data container to avoid ReferenceError in event listeners
 let GEO_DATA = [];
@@ -437,13 +448,69 @@ function initInteractions() {
         });
     }
 
+    // 4. Mobile Logic
+    if (isMobile()) {
+        toggleMobileSidebar(false); // Start collapsed
+
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('click', (e) => {
+                if (e.target.closest('.filters') || e.target.closest('button') || e.target.closest('input')) return;
+                if (sidebar.classList.contains('mobile-collapsed')) {
+                    toggleMobileSidebar(true);
+                }
+            });
+
+            // Swipe logic
+            let touchStartY = 0;
+            sidebar.addEventListener('touchstart', (e) => {
+                touchStartY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            sidebar.addEventListener('touchend', (e) => {
+                const swipeDistance = e.changedTouches[0].screenY - touchStartY;
+                if (swipeDistance > 50 && sidebar.scrollTop <= 5) {
+                    toggleMobileSidebar(false);
+                }
+            }, { passive: true });
+        }
+    }
+
     console.log('✅ HydroAtlas interactions ready');
 }
 
+// Mobile Sidebar Logic
+function toggleMobileSidebar(expand) {
+    if (!isMobile()) return;
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    if (expand) {
+        sidebar.classList.remove('mobile-collapsed');
+    } else {
+        sidebar.classList.add('mobile-collapsed');
+        sidebar.scrollTop = 0;
+    }
+}
+
+// Global Close Function
+window.closeSidebar = function () {
+    toggleMobileSidebar(false);
+};
+
+// Map Click to Collapse
+map.on('click', (e) => {
+    if (isMobile()) {
+        toggleMobileSidebar(false);
+    }
+});
+
 // Global Search Select
 window.handleSearchSelect = function (id) {
-    if (!GEO_DATA) return;
-    const item = GEO_DATA.find(x => x.id === id);
+    const list = window.GEO_DATA || GEO_DATA;
+    if (!list) return;
+
+    const item = list.find(x => x.id === id);
     const layer = layers[id];
 
     if (!item || !layer) return;
@@ -468,6 +535,36 @@ window.handleSearchSelect = function (id) {
 
 // Start Everything
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Render cities (independent logic)
+    const cityIcon = L.divIcon({
+        className: 'city-icon',
+        html: '<div style="background:#fff; width:8px; height:8px; border-radius:50%; box-shadow:0 0 10px #fff;"></div>',
+        iconSize: [8, 8]
+    });
+
+    CITIES.forEach(city => {
+        L.marker(city.coords, {
+            icon: cityIcon,
+            pane: 'cityPane',
+            title: city.name
+        })
+            .addTo(map)
+            .bindTooltip(city.name, {
+                permanent: true,
+                direction: 'right',
+                offset: [10, 0],
+                className: 'city-tooltip'
+            })
+            .on('click', () => {
+                updateSidebar(city);
+                map.flyTo(city.coords, 10);
+                if (isMobile()) toggleMobileSidebar(true);
+            });
+    });
+
+    // 2. Initialize App Data
     initApp();
+
+    // 3. Initialize Interactions
     initInteractions();
 });

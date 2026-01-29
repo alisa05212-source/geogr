@@ -598,11 +598,22 @@ body {
         background: #334155;
         border-color: var(--accent-blue);
     }
-}
 
-/* Move controls down when sidebar is collapsed */
-.sidebar.mobile-collapsed~.controls {
-    bottom: 100px;
+    /* Move controls down when sidebar is collapsed */
+    .sidebar.mobile-collapsed .controls {
+        position: fixed;
+        /* Keep at very bottom of screen */
+        bottom: -100px;
+        /* Hide completely when collapsed */
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Fixed Button on Mobile */
+    .controls {
+        z-index: 4000;
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
 }
 
 .controls button {
