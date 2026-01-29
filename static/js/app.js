@@ -354,61 +354,11 @@ CITIES.forEach(city => {
         });
 });
 
-// Filters
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        const cat = e.target.dataset.filter;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
+// --- INTERACTIONS INITIALIZATION ---
+function initInteractions() {
+    console.log('🚀 HydroAtlas initialization started...');
 
-        GEO_DATA.forEach(item => {
-            const layer = layers[item.id];
-            if (!layer) return;
-
-            let isVisible = false;
-            if (cat === 'all') isVisible = true;
-            else if (cat === 'top' && item.tags && item.tags.includes('top')) isVisible = true;
-            else if (item.type === cat) isVisible = true;
-            else if (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) isVisible = true;
-
-            if (isVisible) {
-                if (!map.hasLayer(layer)) map.addLayer(layer);
-            } else {
-                if (map.hasLayer(layer)) map.removeLayer(layer);
-            }
-        });
-    });
-});
-
-// Mobile Sidebar Logic
-function toggleMobileSidebar(expand) {
-    if (!isMobile()) return;
-    const sidebar = document.querySelector('.sidebar');
-    if (expand) {
-        sidebar.classList.remove('mobile-collapsed');
-    } else {
-        sidebar.classList.add('mobile-collapsed');
-        // Ensure scroll resets when collapsed
-        sidebar.scrollTop = 0;
-    }
-}
-
-// Global Close Function
-window.closeSidebar = function () {
-    toggleMobileSidebar(false);
-};
-
-// Map Click to Collapse
-map.on('click', function (e) {
-    if (isMobile() && !e.originalEvent._stopped) {
-        toggleMobileSidebar(false);
-    }
-});
-
-// --- SEARCH LOGIC ---
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 App initialized');
-
+    // 1. Search Logic
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
 
@@ -420,10 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Safe check for GEO_DATA
-            if (!window.GEO_DATA) return;
+            if (!GEO_DATA || GEO_DATA.length === 0) return;
 
-            const filtered = window.GEO_DATA.filter(item =>
+            const filtered = GEO_DATA.filter(item =>
                 item.name.toLowerCase().includes(query) ||
                 (item.description && item.description.toLowerCase().includes(query))
             ).slice(0, 10);
@@ -441,36 +390,75 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Close results when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-container')) {
                 searchResults.style.display = 'none';
             }
         });
-    } else {
-        console.warn('Search elements not found in DOM');
     }
-});
 
+    // 2. Reset View Logic
+    const resetBtn = document.getElementById('reset-view');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (map) map.setView([48.5, 31.0], 6);
+            if (window.closeSidebar) window.closeSidebar();
+        });
+    }
+
+    // 3. Filters Logic
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    if (filterButtons.length > 0) {
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const cat = e.target.dataset.filter;
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+
+                if (!GEO_DATA) return;
+
+                GEO_DATA.forEach(item => {
+                    const layer = layers[item.id];
+                    if (!layer) return;
+
+                    let isVisible = false;
+                    if (cat === 'all') isVisible = true;
+                    else if (cat === 'top' && item.tags && item.tags.includes('top')) isVisible = true;
+                    else if (item.type === cat) isVisible = true;
+                    else if (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) isVisible = true;
+
+                    if (isVisible) {
+                        if (!map.hasLayer(layer)) map.addLayer(layer);
+                    } else {
+                        if (map.hasLayer(layer)) map.removeLayer(layer);
+                    }
+                });
+            });
+        });
+    }
+
+    console.log('✅ HydroAtlas interactions ready');
+}
+
+// Global Search Select
 window.handleSearchSelect = function (id) {
+    if (!GEO_DATA) return;
     const item = GEO_DATA.find(x => x.id === id);
     const layer = layers[id];
 
     if (!item || !layer) return;
 
-    // Reset dropdown
-    searchInput.value = '';
-    searchResults.style.display = 'none';
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+    if (searchInput) searchInput.value = '';
+    if (searchResults) searchResults.style.display = 'none';
 
-    // Show details
     updateSidebar(item);
     toggleMobileSidebar(true);
 
-    // Visual feedback
     layer.fire('mouseover');
     setTimeout(() => layer.fire('mouseout'), 2000);
 
-    // Move camera
     if (item.path) {
         map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 10 });
     } else if (item.center) {
@@ -478,104 +466,8 @@ window.handleSearchSelect = function (id) {
     }
 };
 
-// Initial State
-if (isMobile()) {
-    toggleMobileSidebar(false);
-
-    // Allow clicking the header area to expand
-    const sidebar = document.querySelector('.sidebar');
-    const header = document.querySelector('.sidebar-header'); // Target the header area for swipes
-
-    sidebar.addEventListener('click', function (e) {
-        // Expand if clicking header or general area (not buttons)
-        if (e.target.closest('.filters') || e.target.closest('button')) return;
-        if (sidebar.classList.contains('mobile-collapsed')) {
-            toggleMobileSidebar(true);
-        }
-    });
-
-    // SWIPE DOWN TO CLOSE (iOS Style)
-    let touchStartY = 0;
-    let touchEndY = 0;
-
-    // Attach to sidebar, but check if we are at the top
-    sidebar.addEventListener('touchstart', function (e) {
-        touchStartY = e.changedTouches[0].screenY;
-    }, { passive: true });
-
-    sidebar.addEventListener('touchend', function (e) {
-        touchEndY = e.changedTouches[0].screenY;
-        handleSwipe();
-    }, { passive: true });
-
-    function handleSwipe() {
-        const swipeDistance = touchEndY - touchStartY;
-        const isAtTop = sidebar.scrollTop <= 5; // Allow small margin
-
-        // If swiped down significantly (> 50px) and we are at the top of the content
-        if (swipeDistance > 50 && isAtTop) {
-            // Check if we are interacting with the handle or header area
-            // Or just generally swiping down when scrolled to top
-            toggleMobileSidebar(false);
-
-            // Also reset selection if desired, or just collapse
-            // window.closeSidebar(); // Uncomment if swipe should fully clear selection too
-        }
-    }
-}
-
-// Updated Legend
-const legend = L.control({ position: 'bottomright' });
-legend.onAdd = function (map) {
-    const div = L.DomUtil.create('div', 'info legend');
-
-    // Mobile Minimized State Logic
-    if (isMobile()) {
-        div.classList.add('minimized');
-        div.setAttribute('title', 'Легенда');
-
-        // Prevent map clicks propagating
-        L.DomEvent.disableClickPropagation(div);
-
-        // Toggle on click
-        div.onclick = function (e) {
-            this.classList.toggle('minimized');
-        };
-    }
-
-    const grades = [
-        { name: 'Річки', color: '#0ea5e9' },
-        { name: 'Прісні озера', color: '#06b6d4' },
-        { name: 'Солоні лимани', color: '#db2777' },
-        { name: 'Болота', color: '#4d7c0f' },
-        { name: 'Артезіанські', color: '#a855f7' },
-        { name: 'Міста', color: '#ffffff' }
-    ];
-
-    let content = '<h4 style="margin:0 0 10px 0; font-size:0.9rem; text-transform:uppercase; color:#94a3b8;">Легенда</h4>';
-    grades.forEach(item => {
-        content += '<div style="display:flex; align-items:center; margin-bottom:4px;"><i style="background:' + item.color + '; width: 12px; height: 12px; display: inline-block; margin-right: 8px; border-radius:3px; box-shadow:0 0 5px ' + item.color + '"></i><span style="font-size:0.85rem;">' + item.name + '</span></div>';
-    });
-
-    if (isMobile()) {
-        content += '<div style="margin-top:8px; font-size:0.7rem; color:#64748b; text-align:center;">(натисни щоб згорнути)</div>';
-    }
-
-    div.innerHTML = content;
-    return div;
-};
-legend.addTo(map);
-
-// Safe Reset View Logic
+// Start Everything
 document.addEventListener('DOMContentLoaded', () => {
-    const resetBtn = document.getElementById('reset-view');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            if (map) map.setView([48.5, 31.0], 6);
-            if (window.closeSidebar) window.closeSidebar();
-        });
-        console.log('Reset button attached');
-    } else {
-        console.warn('Reset View button not found in DOM');
-    }
+    initApp();
+    initInteractions();
 });
