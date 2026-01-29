@@ -1,8 +1,11 @@
 console.clear();
-console.log('🌊 HYDRO ATLAS v6.1: Implementing Managed State...');
+console.log('🌊 HYDRO ATLAS v6.2: Restoring Lost Features & Stabilizing...');
 
 /**
- * SENIOR ARCHITECTURE v6.1 (Managed State & Atomic Layers)
+ * ARCHITECTURE v6.2:
+ * 1. Global AppState (Namespaced)
+ * 2. Unified Initialization Sequence
+ * 3. Restored: Legend, Zoom Controls, Search listeners, Filter stability.
  */
 
 window.AppState = {
@@ -10,15 +13,51 @@ window.AppState = {
     layers: {},
     geoData: [],
     currentFilter: 'all',
-    dataGroup: L.featureGroup(), // Atomic group for all data layers
+    dataGroup: L.featureGroup(),
     isInitialized: false
 };
 
-// Constants
-const RIVER_BLUE = '#00f2ff';
-const LAKE_BLUE = '#0ea5e9';
+// --- CONSTANTS & HELPERS ---
+const RIVER_COLOR = '#0ea5e9'; // Classic Blue (Back to stable design)
+const LAKE_COLOR = '#38bdf8';
+const SALT_COLOR = '#a855f7';
+const GROUND_COLOR = '#8b5cf6';
+const MARSH_COLOR = '#22c55e';
+const CAVE_COLOR = '#fbbf24';
 
-// 1. Initialize Map
+const isMobile = () => window.innerWidth <= 768;
+
+function getStyle(item, isHovered) {
+    let weight = item.type === 'river' ? (isHovered ? 8 : 5) : (isHovered ? 4 : 2);
+    let color = item.color || RIVER_COLOR;
+    let opacity = 0.9;
+    let fillOpacity = isHovered ? 0.9 : 0.7;
+    let className = 'leaflet-interactive';
+
+    if (item.type === 'river') {
+        className += ' river-flow';
+        opacity = 1;
+    } else if (item.type === 'lake' || item.type === 'reservoir') {
+        className += ' lake-glow';
+    }
+
+    if (item.tags?.includes('top') && !isHovered) {
+        weight += 1;
+    }
+
+    return {
+        color: color,
+        fillColor: color,
+        weight: weight,
+        opacity: opacity,
+        fillOpacity: fillOpacity,
+        lineCap: 'round',
+        lineJoin: 'round',
+        className: className
+    };
+}
+
+// 1. Map Initialization
 const map = L.map('map', {
     zoomControl: false,
     minZoom: 4,
@@ -30,143 +69,69 @@ const map = L.map('map', {
 window.AppState.map = map;
 window.AppState.dataGroup.addTo(map);
 
-// Theme & Panes
+// Add Zoom Control (Restored)
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+// Dark Theme (CartoDB)
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; CARTO',
     subdomains: 'abcd',
     maxZoom: 19
 }).addTo(map);
 
+// Create Functional Panes
 map.createPane('groundwaterPane').style.zIndex = 250;
 map.createPane('marshPane').style.zIndex = 300;
 map.createPane('waterPane').style.zIndex = 400;
 map.createPane('riverPane').style.zIndex = 500;
 map.createPane('cityPane').style.zIndex = 600;
 
-// HELPERS
-const isMobile = () => window.innerWidth <= 768;
-
-function getStyle(item, isHovered) {
-    let weight = 4;
-    let opacity = 0.9;
-    let fillOpacity = 0.5;
-    let color = item.color || RIVER_BLUE;
-    let stroke = true;
-    let className = 'leaflet-interactive';
-
-    if (item.type === 'river') {
-        weight = isHovered ? 8 : 5;
-        color = RIVER_BLUE;
-        opacity = 1;
-        className += ' river-flow';
-    } else if (item.type === 'lake' || item.type === 'reservoir') {
-        weight = isHovered ? 5 : 2;
-        color = LAKE_BLUE;
-        fillOpacity = isHovered ? 1 : 0.8;
-        opacity = 1;
-        className += ' lake-glow';
-    } else if (item.type === 'groundwater') {
-        weight = 1;
-        fillOpacity = isHovered ? 0.6 : 0.4;
-        stroke = false;
-        color = '#a855f7';
-    } else if (item.type === 'marsh') {
-        weight = 2;
-        fillOpacity = isHovered ? 0.8 : 0.6;
-        opacity = 1;
-        color = '#4d7c0f';
-    } else if (item.type === 'cave') {
-        weight = isHovered ? 14 : 8;
-        fillOpacity = 1;
-        color = '#fbbf24';
-    }
-
-    if (item.tags && item.tags.includes('top')) {
-        if (!isHovered) weight += 1.5;
-    }
-
-    return {
-        color, fillColor: color, weight, opacity, fillOpacity,
-        lineCap: 'round', lineJoin: 'round', stroke, className
-    };
-}
-
-function getImage(type) {
-    const images = {
-        river: 'https://images.unsplash.com/photo-1546700086-4e007823f66b?auto=format&fit=crop&w=600&q=80',
-        lake: 'https://images.unsplash.com/photo-1506543730-36a567ea349a?auto=format&fit=crop&w=600&q=80',
-        reservoir: 'https://images.unsplash.com/photo-1533240332313-0db49b459ad6?auto=format&fit=crop&w=600&q=80',
-        marsh: 'https://images.unsplash.com/photo-1440557675305-9ca58968f7aa?auto=format&fit=crop&w=600&q=80',
-        cave: 'https://images.unsplash.com/photo-1628172813158-b0a3aa48870c?auto=format&fit=crop&w=600&q=80',
-        city: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=600&q=80',
-        groundwater: 'https://images.unsplash.com/photo-1616886365823-38363c45731f?auto=format&fit=crop&w=600&q=80'
-    };
-    return images[type] || '';
-}
-
-function updateSidebar(item) {
-    const container = document.getElementById('river-details');
-    if (!container) return;
-
-    const icons = { marsh: '🌿', cave: '🦇', groundwater: '💧', city: '🏙️', river: '🔹' };
-    const icon = icons[item.type] || '🔹';
-
-    let statsHtml = '';
-    if (item.length) statsHtml += `<div class="info-stat"><span>Довжина:</span> ${item.length}</div>`;
-    if (item.basin) statsHtml += `<div class="info-stat"><span>Басейн:</span> ${item.basin}</div>`;
-    if (item.area) statsHtml += `<div class="info-stat"><span>Площа:</span> ${item.area}</div>`;
-    if (item.depth) statsHtml += `<div class="info-stat"><span>Глибина:</span> ${item.depth}</div>`;
-    if (item.source) statsHtml += `<div class="info-stat" style="width:100%; border-top:1px dashed rgba(255,255,255,0.1); padding-top:5px;"><span>↘️ Витік:</span> ${item.source}</div>`;
-    if (item.mouth) statsHtml += `<div class="info-stat" style="width:100%;"><span>🌊 Гирло:</span> ${item.mouth}</div>`;
-
-    const factsHtml = (item.facts && item.facts.length > 0) ? `
-        <div class="facts-section" style="margin-top:15px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
-            <h4 style="color:#94a3b8; font-size:0.8rem; text-transform:uppercase; margin-bottom:5px;">Цікаві факти:</h4>
-            <ul style="list-style:none; padding:0;">
-                ${item.facts.map(f => `<li style="margin-bottom:5px; font-size:0.9rem; color:#cbd5e1;">• ${f}</li>`).join('')}
-            </ul>
-        </div>` : '';
-
-    const imageSrc = item.image || getImage(item.type);
-    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' Україна природа')}`;
-
-    container.innerHTML = `
-        <div class="info-card fade-in" style="position:relative;">
-            <div class="sidebar-image-container" style="margin-bottom:15px;">
-                <img src="${imageSrc}" class="sidebar-image" alt="${item.name}" onerror="this.style.display='none'">
+// RESTORED: Map Legend Logic
+function addLegend() {
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function () {
+        const div = L.DomUtil.create('div', 'legend');
+        div.id = 'map-legend';
+        div.innerHTML = `
+            <div class="legend-header" onclick="toggleLegend(event)">
+                <h4>Легенда</h4>
+                <span id="legend-toggle-icon">▼</span>
             </div>
-            <div class="card-header">
-                <h2>${icon} ${item.name}</h2>
-                ${item.tags?.includes('top') ? '<span class="badge-top">★ TOP</span>' : ''}
+            <div id="legend-content">
+                <div class="legend-item"><span style="background:${RIVER_COLOR}"></span> Річки</div>
+                <div class="legend-item"><span style="background:${LAKE_COLOR}"></span> Прісні озера</div>
+                <div class="legend-item"><span style="background:${SALT_COLOR}"></span> Солоні лимани</div>
+                <div class="legend-item"><span style="background:${MARSH_COLOR}"></span> Болота</div>
+                <div class="legend-item"><span style="background:${GROUND_COLOR}"></span> Підземні води</div>
+                <div class="legend-item"><span style="background:${CAVE_COLOR}"></span> Печери</div>
             </div>
-            <a href="${mapsLink}" target="_blank" class="maps-btn">
-                <span>📍 Дивитись фото на карті</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-            </a>
-            <p class="river-desc">${item.description || "Інформація оновлюється..."}</p>
-            <div class="info-grid">${statsHtml}</div>
-            ${factsHtml}
-        </div>
-    `;
+        `;
+        return div;
+    };
+    legend.addTo(map);
 }
 
-// 2. Load Data
+window.toggleLegend = function (e) {
+    if (e) e.stopPropagation();
+    const content = document.getElementById('legend-content');
+    const icon = document.getElementById('legend-toggle-icon');
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.innerText = '▼';
+    } else {
+        content.style.display = 'none';
+        icon.innerText = '▲';
+    }
+};
+
+// 2. Data Seeder
 async function initApp() {
     try {
         const response = await fetch('/api/geo-data');
-        if (!response.ok) throw new Error('Network failure');
+        if (!response.ok) throw new Error('Data fetch failed');
         window.AppState.geoData = await response.json();
-        console.log(`📦 Data Loaded: ${window.AppState.geoData.length} objects.`);
-        renderMap(window.AppState.geoData);
-    } catch (e) {
-        console.error('Core Load Error:', e);
-    }
-}
 
-function renderMap(data) {
-    data.forEach(item => {
-        try {
-            let layer;
+        window.AppState.geoData.forEach(item => {
             let pane = 'overlayPane';
             if (item.type === 'river') pane = 'riverPane';
             else if (item.type === 'lake' || item.type === 'reservoir') pane = 'waterPane';
@@ -175,6 +140,7 @@ function renderMap(data) {
             else if (item.type === 'cave') pane = 'riverPane';
 
             const style = getStyle(item, false);
+            let layer;
 
             if (item.type === 'river') {
                 layer = L.polyline(item.path, { ...style, pane });
@@ -185,7 +151,6 @@ function renderMap(data) {
             }
 
             if (layer) {
-                // ADD TO DATA GROUP INSTEAD OF DIRECT MAP
                 window.AppState.dataGroup.addLayer(layer);
                 window.AppState.layers[item.id] = layer;
 
@@ -196,42 +161,35 @@ function renderMap(data) {
                     updateSidebar(item);
                     toggleMobileSidebar(true);
                     if (layer.getBounds) {
-                        window.AppState.map.flyToBounds(layer.getBounds(), { padding: [20, 20], maxZoom: 10 });
+                        map.flyToBounds(layer.getBounds(), { padding: [30, 30], maxZoom: 10 });
                     } else {
-                        window.AppState.map.flyTo(item.center, 10);
+                        map.flyTo(item.center, 10);
                     }
                 });
-
                 layer.bindTooltip(item.name, { permanent: false, className: 'custom-tooltip' });
             }
-        } catch (e) {
-            console.warn('Skipping invalid item:', item.id);
-        }
-    });
+        });
+        console.log(`✅ Loaded ${window.AppState.geoData.length} items`);
+    } catch (e) {
+        console.error('Boot Error:', e);
+    }
 }
 
-// 3. Interactions logic
+// 3. Interactions UI
 function initInteractions() {
     // FILTERS
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
             const cat = btn.getAttribute('data-filter');
-
-            // GUARD: Prevent redundant processing
             if (window.AppState.currentFilter === cat) return;
             window.AppState.currentFilter = cat;
 
-            console.log(`🧹 Atomic Registry Cleansing for category: ${cat}`);
-
-            // UI Toggle
             filterButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // 1. ATOMIC CLEAR (Using managed FeatureGroup)
             window.AppState.dataGroup.clearLayers();
 
-            // 2. RE-ADD CATEGORY
             window.AppState.geoData.forEach(item => {
                 let isVisible = false;
                 if (cat === 'all') isVisible = true;
@@ -246,28 +204,17 @@ function initInteractions() {
         });
     });
 
-    // Reset View
-    const resetBtn = document.getElementById('reset-view');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            window.AppState.map.setView([48.5, 31.0], 6);
-            window.closeSidebar();
-            // This will trigger the GUARD check and filter reset
-            const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
-            if (allBtn) allBtn.click();
-        });
-    }
-
-    // Search
+    // SEARCH
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
     if (searchInput && searchResults) {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
             if (query.length < 2) { searchResults.style.display = 'none'; return; }
-            const filtered = window.AppState.geoData.filter(it => it.name.toLowerCase().includes(query)).slice(0, 10);
-            if (filtered.length > 0) {
-                searchResults.innerHTML = filtered.map(it => `
+
+            const matches = window.AppState.geoData.filter(it => it.name.toLowerCase().includes(query)).slice(0, 10);
+            if (matches.length > 0) {
+                searchResults.innerHTML = matches.map(it => `
                     <div class="search-result-item" onclick="handleSearchSelect('${it.id}')">
                         <span class="item-name">${it.name}</span>
                         <span class="item-type">${it.type}</span>
@@ -277,16 +224,24 @@ function initInteractions() {
         });
     }
 
-    console.log('✅ HydroAtlas v6.1: Advanced State Online');
+    // RESET BUTTON
+    const resetBtn = document.getElementById('reset-view');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            map.setView([48.5, 31.0], 6);
+            window.closeSidebar();
+            const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+            if (allBtn) allBtn.click();
+        });
+    }
 }
 
-// Global functions
+// Global UI Helpers
 window.handleSearchSelect = function (id) {
     const item = window.AppState.geoData.find(x => x.id === id);
     const layer = window.AppState.layers[id];
     if (!item || !layer) return;
 
-    // Ensure the layer is actually on the map if filtered out
     if (!window.AppState.dataGroup.hasLayer(layer)) {
         window.AppState.dataGroup.addLayer(layer);
     }
@@ -294,9 +249,33 @@ window.handleSearchSelect = function (id) {
     document.getElementById('search-results').style.display = 'none';
     updateSidebar(item);
     toggleMobileSidebar(true);
-    if (layer.getBounds) window.AppState.map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 14 });
-    else window.AppState.map.flyTo(item.center, 14);
+
+    if (layer.getBounds) map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 12 });
+    else map.flyTo(item.center, 12);
 };
+
+function updateSidebar(item) {
+    const container = document.getElementById('river-details');
+    if (!container) return;
+
+    const imageSrc = item.image || `https://images.unsplash.com/photo-1546700086-4e007823f66b?auto=format&fit=crop&w=600&q=80`;
+
+    container.innerHTML = `
+        <div class="info-card fade-in">
+            <div class="sidebar-image-container">
+                <img src="${imageSrc}" class="sidebar-image" alt="${item.name}">
+            </div>
+            <div class="card-header">
+                <h2>${item.name}</h2>
+                ${item.tags?.includes('top') ? '<span class="badge-top">★ TOP</span>' : ''}
+            </div>
+            <p class="river-desc">${item.description || "Опис завантажується..."}</p>
+            <div class="info-grid">
+                ${item.length ? `<div class="info-stat"><span>Довжина:</span> ${item.length}</div>` : ''}
+                ${item.area ? `<div class="info-stat"><span>Площа:</span> ${item.area}</div>` : ''}
+            </div>
+        </div>`;
+}
 
 function toggleMobileSidebar(expand) {
     if (!isMobile()) return;
@@ -309,29 +288,20 @@ function toggleMobileSidebar(expand) {
 
 window.closeSidebar = () => toggleMobileSidebar(false);
 
-// BOOTSTRAP
+// MAIN BOOTSTRAP
 document.addEventListener('DOMContentLoaded', async () => {
-    if (window.AppState.isInitialized) return;
-
+    // 1. Data & Layers
     await initApp();
 
-    const cityIcon = L.divIcon({
-        className: 'city-icon',
-        html: '<div style="background:#fff; width:8px; height:8px; border-radius:50%; box-shadow:0 0 10px #fff;"></div>',
-        iconSize: [8, 8]
-    });
+    // 2. Legend
+    addLegend();
 
-    CITIES.forEach(c => {
-        L.marker(c.coords, { icon: cityIcon, pane: 'cityPane', title: c.name })
-            .addTo(window.AppState.map)
-            .bindTooltip(c.name, { permanent: true, direction: 'right', className: 'city-tooltip' })
-            .on('click', () => {
-                updateSidebar(c);
-                window.AppState.map.flyTo(c.coords, 10);
-                if (isMobile()) toggleMobileSidebar(true);
-            });
-    });
-
+    // 3. Interactions
     initInteractions();
+
+    // 4. Mobile initial state
+    if (isMobile()) toggleMobileSidebar(false);
+
     window.AppState.isInitialized = true;
+    console.log('🏁 System Ready v6.2');
 });
