@@ -468,6 +468,109 @@ body {
     box-shadow: 0 6px 15px rgba(16, 185, 129, 0.5);
 }
 
+/* --- NEW INFO SECTIONS --- */
+.info-section {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.river-desc {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+}
+
+.origin-text {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-top: 8px;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-blue);
+}
+
+.legend-box {
+    margin-top: 12px;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(234, 179, 8, 0.05) 100%);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    color: #fde047;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.info-block {
+    margin-bottom: 20px;
+}
+
+.info-block h3 {
+    font-size: 1.1rem;
+    color: white;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-block p {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+.facts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.facts-list li {
+    position: relative;
+    padding-left: 20px;
+    font-size: 0.95rem;
+    color: #e2e8f0;
+}
+
+.facts-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--accent-blue);
+    font-weight: bold;
+}
+
+.google-maps-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    background: #ffffff;
+    color: #333;
+    text-decoration: none;
+    font-weight: 700;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+}
+
+.google-maps-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
+    background: #f8fafc;
+}
+
 /* --- MOBILE OPTIMIZATION (iPhone 15 Pro & Others) --- */
 @media (max-width: 768px) {
 
