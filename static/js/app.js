@@ -229,7 +229,7 @@ async function initData() {
                 } else {
                     // Default Circle Marker (cities, minerals, etc)
                     layer = L.circleMarker(geo.coordinates, {
-                        radius: item.radius ? item.radius / 1000 * 2 : 8,
+                        radius: item.radius ? item.radius / 1000 * 0.5 : 6,
                         fillColor: item.color,
                         color: "#fff",
                         weight: 2,
@@ -430,12 +430,35 @@ function updateSidebar(item) {
                 <h2>${item.name}</h2>
                 ${item.tags?.includes('top') ? '<span class="badge-top">★ TOP</span>' : ''}
             </div>
-            <p class="river-desc">${item.description || "Опис завантажується..."}</p>
+            
+            <div class="info-section">
+                <p class="river-desc">${item.description || "Опис завантажується..."}</p>
+                ${item.origin ? `<p class="origin-text"><strong>Походження назви:</strong> ${item.origin}</p>` : ''}
+                ${item.legend ? `<div class="legend-box">Wait... 📜 <strong>Легенда:</strong> ${item.legend}</div>` : ''}
+            </div>
+
             <div class="info-grid">
                 ${item.length ? `<div class="info-stat"><span>Довжина:</span> ${item.length}</div>` : ''}
                 ${item.area ? `<div class="info-stat"><span>Площа:</span> ${item.area}</div>` : ''}
+                ${item.depth ? `<div class="info-stat"><span>Глибина:</span> ${item.depth}</div>` : ''}
                 ${item.basin ? `<div class="info-stat"><span>Басейн:</span> ${item.basin}</div>` : ''}
             </div>
+
+            ${item.wildlife ? `<div class="info-block"><h3>🐟 Флора і фауна</h3><p>${item.wildlife}</p></div>` : ''}
+            ${item.ecology ? `<div class="info-block"><h3>⚠️ Екологія</h3><p>${item.ecology}</p></div>` : ''}
+
+            ${item.facts ? `
+            <div class="info-block">
+                <h3>💡 Цікаві факти</h3>
+                <ul class="facts-list">
+                    ${item.facts.map(f => `<li>${f}</li>`).join('')}
+                </ul>
+            </div>` : ''}
+
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' Україна')}" 
+               target="_blank" class="google-maps-btn">
+               🗺️ Показати на Google Maps
+            </a>
         </div>`;
 }
 
