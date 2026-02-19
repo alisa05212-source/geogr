@@ -458,10 +458,21 @@ function updateSidebar(item) {
                 </ul>
             </div>` : ''}
 
-            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + ' Україна')}" 
-               target="_blank" class="google-maps-btn">
-               🗺️ Показати на Google Maps
-            </a>
+            ${(() => {
+            let queryPrefix = '';
+            if (item.type === 'river') queryPrefix = 'річка ';
+            else if (item.type === 'lake') queryPrefix = 'озеро ';
+            else if (item.type === 'reservoir') queryPrefix = 'водосховище ';
+            else if (item.type === 'mountain') queryPrefix = 'гора ';
+            else if (item.type === 'plate') queryPrefix = 'геологічна структура ';
+
+            const query = encodeURIComponent(`${queryPrefix}${item.name} Україна`);
+            return `
+                <a href="https://www.google.com/maps/search/?api=1&query=${query}" 
+                   target="_blank" class="google-maps-btn">
+                   🗺️ Показати на Google Maps
+                </a>`;
+        })()}
         </div>`;
 }
 
