@@ -79,6 +79,68 @@ body {
     text-transform: uppercase;
 }
 
+/* Sphere Switcher */
+.sphere-switcher {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.sphere-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.sphere-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.sphere-btn.active {
+    transform: scale(1.05);
+}
+
+/* Specific colors for spheres */
+.sphere-btn[data-sphere="lithosphere"].active {
+    background: #e11d48;
+    /* Red/Magma */
+    border-color: #e11d48;
+    box-shadow: 0 0 20px rgba(225, 29, 72, 0.4);
+}
+
+.sphere-btn[data-sphere="atmosphere"].active {
+    background: #0ea5e9;
+    /* Sky Blue */
+    border-color: #0ea5e9;
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+}
+
+.sphere-btn[data-sphere="hydrosphere"].active {
+    background: #3b82f6;
+    /* Deep Blue */
+    border-color: #3b82f6;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.sphere-btn[data-sphere="biosphere"].active {
+    background: #22c55e;
+    /* Green */
+    border-color: #22c55e;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+}
+
 /* Search Container */
 .search-container {
     padding: 0 15px 15px 15px;
@@ -644,16 +706,44 @@ body {
 }
 
 /* Zoom Controls */
+/* Zoom Controls */
 .leaflet-control-zoom {
     margin-top: 0 !important;
-    display: none !important;
-    /* Hide zoom buttons on mobile to save space if needed, or adjust */
+    display: flex !important;
+    flex-direction: column;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    background: transparent !important;
 }
 
-/* Adjust if we keep zoom controls */
+.leaflet-control-zoom a {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+    text-indent: 0 !important;
+    border-radius: 8px !important;
+    margin-bottom: 5px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer !important;
+    text-decoration: none !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background-color: var(--accent-blue) !important;
+    color: #fff !important;
+}
+
+/* Position Container - Below Google Login */
 .leaflet-top.leaflet-right {
-    top: 90px;
-    right: 10px;
-    display: none;
-    /* Often gestures are enough, removes clutter */
+    top: 90px !important;
+    right: 15px !important;
+    display: block !important;
+    z-index: 4000 !important;
 }

@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 from database import init_db, get_db
 # Models must be imported before init_db if they are not imported in database.py
 import models 
-from models import User, Place
+from models import User, GeoObject
 
 # CONFIGURATION
 # Security: Read ONLY from environment variables. Hardcoding here is a security risk.
@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
         
         # Check if DB is populated (Migration Check)
         db = next(get_db())
-        count = db.query(Place).count()
+        count = db.query(GeoObject).count()
         if count == 0:
             logger.warning("DATABASE IS EMPTY! Starting auto-population from data.js...")
             try:
@@ -205,49 +205,70 @@ async def logout(request: Request):
     return RedirectResponse(url='/')
 
 # API Endpoints
-from models import Place
+from models import GeoObject
 
 @app.get("/api/geo-data")
 async def get_geo_data(db: Session = Depends(get_db)):
-    places = db.query(Place).all()
+    # Optional: Filter by category if query param exists (for future)
+    places = db.query(GeoObject).all()
     
     # Serialize manually to match exact JS structure expected by frontend
-    data = []
+    # Use Pydantic to serialize
+    from schemas import GeoFeatureCollection, GeoFeature, GeoProperties, GeometryPoint, GeometryLineString, GeometryPolygon
+
+    features = []
+    
     for p in places:
-        # Reconstruct element
-        item = {
-            "id": p.id,
-            "type": p.type,
-            "name": p.name,
-            "description": p.description,
-            "origin": p.origin,
-            "legend": p.legend,
-            "wildlife": p.wildlife,
-            "ecology": p.ecology,
-            "facts": p.facts if p.facts else [],
-            "tags": p.tags if p.tags else [],
+        # Construct Geometry
+        geometry = None
+        if p.path:
+            # Check if it's a polygon (first and last point match) or just a line
+            # For now, simplistic heuristic: if type is lake/reservoir/plate/soil -> Polygon, else LineString
+            # But wait, p.path is list of [lat, lng].
+            if p.type in ['lake', 'reservoir', 'plate', 'soil', 'climate', 'marsh', 'groundwater']:
+                 geometry = GeometryPolygon(type="Polygon", coordinates=[p.path]) # GeoJSON Polygons are nested [[[lat,lng],..]]
+            else:
+                 geometry = GeometryLineString(type="LineString", coordinates=p.path)
+                 
+        elif p.center:
+            geometry = GeometryPoint(type="Point", coordinates=p.center)
             
-            # Stats (only include if present)
-            "length": p.length,
-            "area": p.area,
-            "depth": p.depth,
-            "basin": p.basin,
-            "source": p.source,
-            "mouth": p.mouth,
+        # Construct Properties
+        props = GeoProperties(
+            name=p.name,
+            description=p.description,
+            category=p.category,
+            type=p.type,
+            origin=p.origin,
+            legend=p.legend,
+            wildlife=p.wildlife,
+            ecology=p.ecology,
+            facts=p.facts if p.facts else [],
+            tags=p.tags if p.tags else [],
             
-            # Visuals
-            "color": p.color,
-            "radius": p.radius,
+            # Legacy fields map directly
+            length=p.length,
+            area=p.area,
+            depth=p.depth,
+            basin=p.basin,
+            source=p.source,
+            mouth=p.mouth,
             
-            # Geometry
-            "center": p.center,
-            "path": p.path
-        }
-        # Filter None values to keep payload clean/small? 
-        # JS is fine with nulls, but cleaner to remove empty keys if originally not present
-        data.append({k: v for k, v in item.items() if v is not None})
+            color=p.color,
+            radius=p.radius,
+            image=p.image,
+            
+            attributes=p.attributes if p.attributes else {}
+        )
         
-    return data
+        feature = GeoFeature(
+            id=p.id,
+            geometry=geometry.model_dump() if geometry else None,
+            properties=props
+        )
+        features.append(feature)
+
+    return GeoFeatureCollection(features=features)
 
 @app.get("/api/debug/reset-db")
 async def reset_db(db: Session = Depends(get_db)):

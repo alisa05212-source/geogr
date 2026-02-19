@@ -12,6 +12,7 @@ window.AppState = {
     map: null,
     layers: {},
     geoData: [],
+    currentCategory: 'hydrosphere', // Default sphere
     currentFilter: 'all',
     dataGroup: L.featureGroup(),
     isInitialized: false,
@@ -27,6 +28,52 @@ window.AppState = {
         { name: "Миколаїв", coords: [46.97, 31.99], description: "Місто корабелів." },
         { name: "Херсон", coords: [46.63, 32.61], description: "Ключ до Криму." }
     ]
+};
+
+// --- SPHERE CONFIGURATION ---
+const SPHERE_CONFIG = {
+    hydrosphere: {
+        name: "Гідросфера",
+        color: "#3b82f6",
+        filters: [
+            { id: "all", label: "Всі" },
+            { id: "river", label: "Річки" },
+            { id: "lake", label: "Озера" },
+            { id: "reservoir", label: "Водосховища" },
+            { id: "groundwater", label: "Підземні" },
+            { id: "marsh", label: "Болота" }
+        ]
+    },
+    lithosphere: {
+        name: "Літосфера",
+        color: "#e11d48",
+        filters: [
+            { id: "all", label: "Всі" },
+            { id: "mineral", label: "Копалини" },
+            { id: "relief", label: "Рельєф" },
+            { id: "plate", label: "Тектоніка" }
+        ]
+    },
+    atmosphere: {
+        name: "Атмосфера",
+        color: "#0ea5e9",
+        filters: [
+            { id: "all", label: "Всі" },
+            { id: "climate", label: "Клімат" },
+            { id: "wind", label: "Ветра" },
+            { id: "temperature", label: "Температура" }
+        ]
+    },
+    biosphere: {
+        name: "Біосфера",
+        color: "#22c55e",
+        filters: [
+            { id: "all", label: "Всі" },
+            { id: "reserve", label: "Заповідники" },
+            { id: "soil", label: "Грунти" },
+            { id: "vegetation", label: "Рослинність" }
+        ]
+    }
 };
 
 // --- STYLING CONSTANTS ---
@@ -124,9 +171,18 @@ async function initData() {
     try {
         const response = await fetch('/api/geo-data');
         if (!response.ok) throw new Error('API unreachable');
-        window.AppState.geoData = await response.json();
 
-        window.AppState.geoData.forEach(item => {
+        // GEOJSON PARSING
+        const data = await response.json();
+        // The API returns { type: "FeatureCollection", features: [...] }
+        window.AppState.geoData = data.features;
+
+        window.AppState.geoData.forEach(feature => {
+            const item = feature.properties;
+            const geo = feature.geometry;
+            const id = feature.id; // Top level ID in GeoJSON feature
+
+            // --- LAYER LOGIC ---
             let pane = 'overlayPane';
             if (item.type === 'river') pane = 'riverPane';
             else if (item.type === 'lake' || item.type === 'reservoir') pane = 'waterPane';
@@ -137,17 +193,60 @@ async function initData() {
             const style = getStyle(item, false);
             let layer;
 
-            if (item.type === 'river' && item.path) {
-                layer = L.polyline(item.path, { ...style, pane });
-            } else if (item.path) {
-                layer = L.polygon(item.path, { ...style, pane });
-            } else if (item.center) {
-                layer = L.circle(item.center, { radius: item.radius || 3000, ...style, pane });
+            // --- GEOMETRY HANDLING (Adapted for Leaflet) ---
+            if (geo.type === 'LineString') {
+                // GeoJSON LineString: [[lat, lng], [lat, lng]] (In our implementation)
+                // If standard GeoJSON [lng, lat] was used, we would need L.geoJSON or swap coordinates.
+                // Current Schema implementation kept it as [lat, lng] for simplicity.
+                layer = L.polyline(geo.coordinates, { ...style, pane });
+            }
+            else if (geo.type === 'Polygon') {
+                // Polygon coordinates are nested: [[[lat, lng], ...]]
+                // Leaflet takes [[lat, lng], ...] for simple polygon, or [[[lat, lng]..]] for holes.
+                // Our schema wrapped it in a list, so we take the first ring.
+                layer = L.polygon(geo.coordinates[0], {
+                    color: item.color,
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.4,
+                    pane: pane
+                });
+            }
+            else if (geo.type === 'Point') {
+                if (item.type === 'wind') {
+                    // Custom Wind Marker
+                    const rotation = item.attributes?.rotation || 0; // Access attributes for extra data
+                    const iconHtml = `<div style="transform: rotate(${rotation}deg); color: ${item.color || '#fff'};">➤</div>`;
+                    layer = L.marker(geo.coordinates, {
+                        icon: L.divIcon({
+                            className: 'wind-icon',
+                            html: iconHtml,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        }),
+                        pane: pane
+                    });
+                } else {
+                    // Default Circle Marker (cities, minerals, etc)
+                    layer = L.circleMarker(geo.coordinates, {
+                        radius: item.radius ? item.radius / 1000 * 2 : 8,
+                        fillColor: item.color,
+                        color: "#fff",
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8,
+                        pane: pane
+                    });
+
+                    if (['mineral', 'relief'].includes(item.type)) {
+                        layer.setStyle({ radius: 8, weight: 1, fillOpacity: 0.9 });
+                    }
+                }
             }
 
             if (layer) {
                 window.AppState.dataGroup.addLayer(layer);
-                window.AppState.layers[item.id] = layer;
+                window.AppState.layers[id] = layer;
 
                 layer.on('mouseover', function () { this.setStyle(getStyle(item, true)); });
                 layer.on('mouseout', function () { this.setStyle(getStyle(item, false)); });
@@ -155,13 +254,18 @@ async function initData() {
                     L.DomEvent.stopPropagation(e);
                     updateSidebar(item);
                     toggleMobileSidebar(true);
+
                     if (layer.getBounds) map.flyToBounds(layer.getBounds(), { padding: [30, 30], maxZoom: 10 });
-                    else map.flyTo(item.center, 10);
+                    else map.flyTo(geo.coordinates, 10);
                 });
                 layer.bindTooltip(item.name, { permanent: false, className: 'custom-tooltip' });
             }
         });
-        console.log(`📦 Registry Ready: ${window.AppState.geoData.length} objects synced.`);
+
+        // Initial Render
+        updateMapLayers();
+
+        console.log(`📦 Registry Ready: ${window.AppState.geoData.length} features synced.`);
     } catch (e) {
         console.error('Core Boot Failure:', e);
     }
@@ -169,68 +273,130 @@ async function initData() {
 
 // 3. UI Initialization
 function initUI() {
-    // FILTERS
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    // 3.1 SPHERE SWITCHER
+    document.querySelectorAll('.sphere-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sphere = btn.getAttribute('data-sphere');
+            if (window.AppState.currentCategory === sphere) return;
+
+            // Update State
+            window.AppState.currentCategory = sphere;
+            window.AppState.currentFilter = 'all';
+
+            // Update UI Buttons
+            document.querySelectorAll('.sphere-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Re-render Filters & Map
+            renderFilters(sphere);
+            updateMapLayers();
+
+            // Update Title
+            const sphereName = SPHERE_CONFIG[sphere].name;
+            document.querySelector('.sidebar-header h1').innerHTML = `${sphereName} <span class="badge-v">v6.0</span>`;
+        });
+    });
+
+    // Initial Filter Render
+    renderFilters(window.AppState.currentCategory);
+}
+
+function renderFilters(sphere) {
+    const container = document.getElementById('dynamic-filters');
+    const config = SPHERE_CONFIG[sphere];
+    if (!container || !config) return;
+
+    container.innerHTML = config.filters.map((f, index) => `
+        <button class="filter-btn ${index === 0 ? 'active' : ''}" data-filter="${f.id}">
+            ${f.label}
+        </button>
+    `).join('');
+
+    // Re-attach event listeners to new buttons
+    container.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const cat = btn.getAttribute('data-filter');
             if (window.AppState.currentFilter === cat) return;
             window.AppState.currentFilter = cat;
 
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            window.AppState.dataGroup.clearLayers();
-
-            window.AppState.geoData.forEach(item => {
-                let isVisible = (cat === 'all') ||
-                    (cat === 'top' && item.tags?.includes('top')) ||
-                    (cat === 'groundwater' && (item.type === 'groundwater' || item.type === 'cave')) ||
-                    (item.type === cat);
-
-                if (isVisible && window.AppState.layers[item.id]) {
-                    window.AppState.dataGroup.addLayer(window.AppState.layers[item.id]);
-                }
-            });
+            updateMapLayers();
         });
     });
+}
 
-    // SEARCH
-    const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results');
-    if (searchInput && searchResults) {
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            if (query.length < 2) { searchResults.style.display = 'none'; return; }
+function updateMapLayers() {
+    window.AppState.dataGroup.clearLayers();
+    const sphere = window.AppState.currentCategory;
+    const filter = window.AppState.currentFilter; // 'all' or specific type
 
-            const matches = window.AppState.geoData.filter(it => it.name.toLowerCase().includes(query)).slice(0, 10);
-            if (matches.length > 0) {
-                searchResults.innerHTML = matches.map(it => `
-                    <div class="search-result-item" onclick="handleSearchSelect('${it.id}')">
-                        <span class="item-name">${it.name}</span>
-                        <span class="item-type">${it.type}</span>
+    window.AppState.geoData.forEach(feature => {
+        const item = feature.properties;
+        const id = feature.id;
+
+        // 1. Filter by Sphere (Category)
+        const itemCategory = item.category || 'hydrosphere';
+        if (itemCategory !== sphere) return;
+
+        // 2. Filter by Type
+        let isVisible = (filter === 'all') || (item.type === filter);
+
+        // Special case for 'groundwater' filter which includes 'cave'
+        if (filter === 'groundwater' && item.type === 'cave') isVisible = true;
+
+        if (isVisible && window.AppState.layers[id]) {
+            window.AppState.dataGroup.addLayer(window.AppState.layers[id]);
+        }
+    });
+}
+
+
+
+// SEARCH
+const searchInput = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+if (searchInput && searchResults) {
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query.length < 2) { searchResults.style.display = 'none'; return; }
+
+        const matches = window.AppState.geoData
+            .filter(f => f.properties.name.toLowerCase().includes(query)) // Search in props
+            .slice(0, 10);
+
+        if (matches.length > 0) {
+            searchResults.innerHTML = matches.map(f => `
+                    <div class="search-result-item" onclick="handleSearchSelect('${f.id}')">
+                        <span class="item-name">${f.properties.name}</span>
+                        <span class="item-type">${f.properties.type}</span>
                     </div>`).join('');
-                searchResults.style.display = 'block';
-            } else { searchResults.style.display = 'none'; }
-        });
-    }
+            searchResults.style.display = 'block';
+        } else { searchResults.style.display = 'none'; }
+    });
+}
 
-    // RESET
-    const resetBtn = document.getElementById('reset-view');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            map.setView([48.5, 31.0], 6);
-            window.closeSidebar();
-            const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
-            if (allBtn) allBtn.click();
-        });
-    }
+// RESET
+const resetBtn = document.getElementById('reset-view');
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        map.setView([48.5, 31.0], 6);
+        window.closeSidebar();
+        const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+        if (allBtn) allBtn.click();
+    });
 }
 
 // --- GLOBAL HELPERS ---
 window.handleSearchSelect = function (id) {
-    const item = window.AppState.geoData.find(x => x.id === id);
+    // Find nested property search
+    const feature = window.AppState.geoData.find(x => x.id === id);
+    if (!feature) return;
+
+    const item = feature.properties;
     const layer = window.AppState.layers[id];
-    if (!item || !layer) return;
+    if (!layer) return;
 
     if (!window.AppState.dataGroup.hasLayer(layer)) {
         window.AppState.dataGroup.addLayer(layer);
@@ -243,13 +409,19 @@ window.handleSearchSelect = function (id) {
     toggleMobileSidebar(true);
 
     if (layer.getBounds) map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 12 });
-    else map.flyTo(item.center, 12);
+    else map.flyTo(feature.geometry.coordinates, 12); // Use geometry coords
 };
 
 function updateSidebar(item) {
     const container = document.getElementById('river-details');
     if (!container) return;
-    const imageSrc = item.image || `https://images.unsplash.com/photo-1546700086-4e007823f66b?auto=format&fit=crop&w=600&q=80`;
+    // IMAGE LOGIC: Prioritize DB image -> specific type placeholder -> default
+    let imageSrc = item.image;
+    if (!imageSrc || imageSrc === "null" || imageSrc === "") {
+        if (item.type === 'lake' || item.type === 'reservoir') imageSrc = '/static/assets/placeholder_lake.svg';
+        else if (item.type === 'river') imageSrc = '/static/assets/placeholder_river.svg';
+        else imageSrc = '/static/assets/placeholder_default.svg';
+    }
 
     container.innerHTML = `
         <div class="info-card fade-in">
