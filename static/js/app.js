@@ -427,14 +427,17 @@ function updateSidebar(item) {
         <div class="info-card fade-in">
             <div class="sidebar-image-container"><img src="${imageSrc}" class="sidebar-image"></div>
             <div class="card-header">
-                <h2>${item.name}</h2>
+                <div class="header-row">
+                    <h2>${item.name}</h2>
+                    <button class="mobile-close-btn" onclick="window.closeSidebar()">✕</button>
+                </div>
                 ${item.tags?.includes('top') ? '<span class="badge-top">★ TOP</span>' : ''}
             </div>
             
             <div class="info-section">
                 <p class="river-desc">${item.description || "Опис завантажується..."}</p>
                 ${item.origin ? `<p class="origin-text"><strong>Походження назви:</strong> ${item.origin}</p>` : ''}
-                ${item.legend ? `<div class="legend-box">Wait... 📜 <strong>Легенда:</strong> ${item.legend}</div>` : ''}
+                ${item.legend ? `<div class="legend-box">📜 <strong>Легенда:</strong> ${item.legend}</div>` : ''}
             </div>
 
             <div class="info-grid">
